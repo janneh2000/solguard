@@ -329,6 +329,16 @@
     <script>
         let API_BASE='',alerts=[],eventSource=null,isDemo=false,demoInterval=null;
 
+        // ── ngrok-compatible fetch wrapper ─────────────────────
+        // ngrok free tier shows a browser warning page that blocks API calls.
+        // This header tells ngrok to skip that page and proxy directly.
+        const NGROK_HEADERS = {'ngrok-skip-browser-warning': 'true'};
+
+        function apiFetch(url, opts = {}) {
+            opts.headers = { ...NGROK_HEADERS, ...(opts.headers || {}) };
+            return fetch(url, opts);
+        }
+
         const DEMO_PROGRAMS=[
             {name:"Jupiter v6",program_id:"JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",authority:"CvQZZ23qYDWF2RUpxYJ8...",is_immutable:false},
             {name:"Raydium AMM",program_id:"675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",authority:"GThUX1Atko4tqhN2NaiT...",is_immutable:false},
@@ -360,7 +370,7 @@
             document.getElementById('connectionStatus').textContent='connecting...';
             document.getElementById('connectionDot').className='status-dot';
             try{
-                const res=await fetch(`${API_BASE}/health`,{signal:AbortSignal.timeout(5000)});
+                const res=await apiFetch(`${API_BASE}/health`,{signal:AbortSignal.timeout(5000)});
                 if(res.ok){
                     document.getElementById('connectionDot').className='status-dot';
                     document.getElementById('connectionStatus').textContent='live';
@@ -401,33 +411,53 @@
         }
 
         async function fetchWatchlist(){
-            try{const r=await fetch(`${API_BASE}/api/watchlist`);const d=await r.json();
+            try{const r=await apiFetch(`${API_BASE}/api/watchlist`);const d=await r.json();
             renderWatchlist(d.programs);document.getElementById('watchlistCount').textContent=`${d.total} programs`;}catch(e){}
         }
         async function fetchAlerts(){
-            try{const r=await fetch(`${API_BASE}/api/alerts?limit=50`);const d=await r.json();
+            try{const r=await apiFetch(`${API_BASE}/api/alerts?limit=50`);const d=await r.json();
             alerts=d.alerts||[];renderAlerts();}catch(e){}
         }
         async function fetchStats(){
-            try{const r=await fetch(`${API_BASE}/api/stats`);const d=await r.json();
+            try{const r=await apiFetch(`${API_BASE}/api/stats`);const d=await r.json();
             updateStats(d);if(d.last_poll&&d.last_poll!=='never')document.getElementById('lastPoll').textContent=`last poll: ${timeAgo(d.last_poll)}`;}catch(e){}
         }
 
         function connectSSE(){
             if(eventSource)eventSource.close();
-            eventSource=new EventSource(`${API_BASE}/api/stream`);
-            eventSource.onopen=()=>{document.getElementById('connectionDot').className='status-dot';document.getElementById('connectionStatus').textContent='live';};
-            eventSource.onmessage=(e)=>{
-                try{const d=JSON.parse(e.data);
-                    if(d.type==='alert'){alerts.unshift(d.alert);if(alerts.length>100)alerts.pop();renderAlerts();fetchStats();}
-                    else if(d.type==='watchlist_update'){renderWatchlist(d.programs);document.getElementById('lastPoll').textContent='last poll: just now';}
-                }catch(err){}
-            };
-            eventSource.onerror=()=>{
-                document.getElementById('connectionDot').className='status-dot disconnected';
-                document.getElementById('connectionStatus').textContent='reconnecting...';
-                setTimeout(connectSSE,5000);
-            };
+            // SSE via EventSource doesn't support custom headers natively.
+            // Use fetch-based SSE polyfill for ngrok compatibility.
+            async function sseViaFetch(){
+                try{
+                    const res=await apiFetch(`${API_BASE}/api/stream`);
+                    const reader=res.body.getReader();
+                    const decoder=new TextDecoder();
+                    let buffer='';
+                    document.getElementById('connectionDot').className='status-dot';
+                    document.getElementById('connectionStatus').textContent='live';
+                    while(true){
+                        const{done,value}=await reader.read();
+                        if(done)break;
+                        buffer+=decoder.decode(value,{stream:true});
+                        const lines=buffer.split('\n');
+                        buffer=lines.pop()||'';
+                        for(const line of lines){
+                            if(line.startsWith('data: ')){
+                                try{
+                                    const d=JSON.parse(line.slice(6));
+                                    if(d.type==='alert'){alerts.unshift(d.alert);if(alerts.length>100)alerts.pop();renderAlerts();fetchStats();}
+                                    else if(d.type==='watchlist_update'){renderWatchlist(d.programs);document.getElementById('lastPoll').textContent='last poll: just now';}
+                                }catch(err){}
+                            }
+                        }
+                    }
+                }catch(e){
+                    document.getElementById('connectionDot').className='status-dot disconnected';
+                    document.getElementById('connectionStatus').textContent='reconnecting...';
+                    setTimeout(sseViaFetch,5000);
+                }
+            }
+            sseViaFetch();
         }
 
         function renderWatchlist(programs){
@@ -479,7 +509,7 @@
                 alerts.forEach(x=>{const k=x.risk_level.toLowerCase();if(s[k]!==undefined)s[k]++;});updateStats(s);return;}
             if(!API_BASE){return;}
             try{const btn=document.querySelector('.btn-trigger');btn.textContent='⚡ SENDING...';btn.disabled=true;
-                await fetch(`${API_BASE}/api/trigger-test`,{method:'POST'});
+                await apiFetch(`${API_BASE}/api/trigger-test`,{method:'POST'});
                 btn.textContent='✓ QUEUED';setTimeout(()=>{btn.textContent='⚡ SIMULATE AUTHORITY CHANGE';btn.disabled=false;},2000);
             }catch(e){}
         }
