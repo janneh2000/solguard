@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0b0f"/>
+      <stop offset="100%" style="stop-color:#12131a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00f0a0"/>
+      <stop offset="100%" style="stop-color:#00c080"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <rect width="800" height="200" fill="url(#bg)" rx="12"/>
+  
+  <!-- Grid lines -->
+  <g opacity="0.05" stroke="#00f0a0">
+    <line x1="0" y1="50" x2="800" y2="50" stroke-width="0.5"/>
+    <line x1="0" y1="100" x2="800" y2="100" stroke-width="0.5"/>
+    <line x1="0" y1="150" x2="800" y2="150" stroke-width="0.5"/>
+    <line x1="200" y1="0" x2="200" y2="200" stroke-width="0.5"/>
+    <line x1="400" y1="0" x2="400" y2="200" stroke-width="0.5"/>
+    <line x1="600" y1="0" x2="600" y2="200" stroke-width="0.5"/>
+  </g>
+  
+  <!-- Shield icon -->
+  <g transform="translate(280, 55)" filter="url(#glow)">
+    <path d="M30 0 L60 15 L60 40 C60 65 30 80 30 80 C30 80 0 65 0 40 L0 15 Z" 
+          fill="url(#accent)" opacity="0.9"/>
+    <path d="M30 20 L20 35 L28 35 L25 55 L40 32 L32 32 L38 20 Z" 
+          fill="#0a0b0f" opacity="0.8"/>
+  </g>
+  
+  <!-- Title -->
+  <text x="360" y="95" font-family="monospace" font-size="42" font-weight="bold" fill="#e8eaf0" letter-spacing="-1">
+    Sol<tspan fill="#00f0a0">Guard</tspan>
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="400" y="130" font-family="monospace" font-size="14" fill="#8b8fa3" text-anchor="middle" letter-spacing="2">
+    AUTONOMOUS AI SENTINEL FOR SOLANA
+  </text>
+  
+  <!-- Tags -->
+  <g transform="translate(245, 148)">
+    <rect width="90" height="22" rx="4" fill="#00f0a0" opacity="0.1"/>
+    <text x="45" y="15" font-family="monospace" font-size="10" fill="#00f0a0" text-anchor="middle">CLAUDE AI</text>
+  </g>
+  <g transform="translate(345, 148)">
+    <rect width="90" height="22" rx="4" fill="#9945FF" opacity="0.1"/>
+    <text x="45" y="15" font-family="monospace" font-size="10" fill="#9945FF" text-anchor="middle">SOLANA</text>
+  </g>
+  <g transform="translate(445, 148)">
+    <rect width="90" height="22" rx="4" fill="#ff8c42" opacity="0.1"/>
+    <text x="45" y="15" font-family="monospace" font-size="10" fill="#ff8c42" text-anchor="middle">REAL-TIME</text>
+  </g>
+</svg>

@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolGuard — Sentinel Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0b0f;
+            --bg-card: #12131a;
+            --bg-card-hover: #181924;
+            --border: #1e2030;
+            --border-glow: #2a2d45;
+            --text-primary: #e8eaf0;
+            --text-secondary: #8b8fa3;
+            --text-dim: #5a5e72;
+            --accent: #00f0a0;
+            --accent-dim: rgba(0, 240, 160, 0.1);
+            --accent-glow: rgba(0, 240, 160, 0.3);
+            --critical: #ff3b5c;
+            --critical-bg: rgba(255, 59, 92, 0.08);
+            --critical-glow: rgba(255, 59, 92, 0.4);
+            --high: #ff8c42;
+            --high-bg: rgba(255, 140, 66, 0.08);
+            --medium: #ffd23f;
+            --medium-bg: rgba(255, 210, 63, 0.08);
+            --low: #00f0a0;
+            --low-bg: rgba(0, 240, 160, 0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Background effect ─────────────────────────────── */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(0, 240, 160, 0.03) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, rgba(100, 80, 255, 0.02) 0%, transparent 50%);
+            animation: bgShift 20s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+
+        @keyframes bgShift {
+            from { transform: translate(0, 0) rotate(0deg); }
+            to { transform: translate(-5%, 3%) rotate(3deg); }
+        }
+
+        /* ── Scanline overlay ──────────────────────────────── */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 240, 160, 0.008) 2px,
+                rgba(0, 240, 160, 0.008) 4px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* ── Header ────────────────────────────────────────── */
+        header {
+            padding: 24px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 11, 15, 0.85);
+        }
+
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .shield-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent) 0%, #00c080 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span {
+            color: var(--accent);
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.disconnected {
+            background: var(--critical);
+            box-shadow: 0 0 8px var(--critical-glow);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        /* ── Main layout ───────────────────────────────────── */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 40px;
+        }
+
+        /* ── Stats grid ────────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--card-accent, var(--accent));
+            opacity: 0.5;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-glow);
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--card-accent, var(--accent));
+        }
+
+        .stat-card.critical { --card-accent: var(--critical); }
+        .stat-card.high { --card-accent: var(--high); }
+        .stat-card.medium { --card-accent: var(--medium); }
+        .stat-card.low { --card-accent: var(--low); }
+
+        /* ── Two-column layout ─────────────────────────────── */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+        }
+
+        /* ── Section panels ────────────────────────────────── */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-secondary);
+        }
+
+        .panel-badge {
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 4px 10px;
+            border-radius: 100px;
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .panel-body {
+            padding: 16px;
+            max-height: 520px;
+            overflow-y: auto;
+        }
+
+        .panel-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .panel-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .panel-body::-webkit-scrollbar-thumb {
+            background: var(--border-glow);
+            border-radius: 2px;
+        }
+
+        /* ── Alert cards ───────────────────────────────────── */
+        .alert-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+            border-left: 3px solid var(--alert-color, var(--text-dim));
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-12px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .alert-card:hover {
+            border-color: var(--border-glow);
+            border-left-color: var(--alert-color, var(--text-dim));
+            background: var(--bg-card-hover);
+        }
+
+        .alert-card.CRITICAL { --alert-color: var(--critical); background: var(--critical-bg); }
+        .alert-card.HIGH { --alert-color: var(--high); background: var(--high-bg); }
+        .alert-card.MEDIUM { --alert-color: var(--medium); background: var(--medium-bg); }
+        .alert-card.LOW { --alert-color: var(--low); background: var(--low-bg); }
+
+        .alert-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .alert-risk {
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--alert-color, var(--text-dim));
+            color: var(--bg-primary);
+            letter-spacing: 0.5px;
+        }
+
+        .alert-time {
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-dim);
+        }
+
+        .alert-program {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .alert-summary {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .alert-action {
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            padding: 6px 10px;
+            background: var(--accent-dim);
+            border-radius: 6px;
+        }
+
+        /* ── Watchlist ─────────────────────────────────────── */
+        .program-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .program-row:last-child { border-bottom: none; }
+
+        .program-row:hover { background: var(--bg-card-hover); }
+
+        .program-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .program-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .program-status-dot.immutable {
+            background: var(--accent);
+            box-shadow: 0 0 6px var(--accent-glow);
+        }
+
+        .program-status-dot.mutable {
+            background: var(--high);
+            box-shadow: 0 0 6px rgba(255, 140, 66, 0.4);
+        }
+
+        .program-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .program-authority {
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-dim);
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .program-tag {
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .program-tag.immutable {
+            background: var(--low-bg);
+            color: var(--low);
+        }
+
+        .program-tag.mutable {
+            background: var(--high-bg);
+            color: var(--high);
+        }
+
+        /* ── Trigger button ────────────────────────────────── */
+        .trigger-section {
+            margin-top: 24px;
+        }
+
+        .btn-trigger {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--critical);
+            background: var(--critical-bg);
+            color: var(--critical);
+            border-radius: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-trigger:hover {
+            background: var(--critical);
+            color: var(--bg-primary);
+            box-shadow: 0 0 30px var(--critical-glow);
+        }
+
+        .btn-trigger:active {
+            transform: scale(0.98);
+        }
+
+        /* ── Empty state ───────────────────────────────────── */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-dim);
+        }
+
+        .empty-state-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+
+        .empty-state-text {
+            font-size: 13px;
+        }
+
+        /* ── Footer ────────────────────────────────────────── */
+        footer {
+            text-align: center;
+            padding: 32px;
+            color: var(--text-dim);
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        footer a { color: var(--accent); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* ── Responsive ────────────────────────────────────── */
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .content-grid { grid-template-columns: 1fr; }
+            header { padding: 16px 20px; }
+            main { padding: 20px; }
+        }
+
+        @media (max-width: 640px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .status-bar { display: none; }
+        }
+
+        /* ── Flash animation for new alerts ────────────────── */
+        @keyframes flashIn {
+            0% { background: rgba(255, 59, 92, 0.2); }
+            100% { background: transparent; }
+        }
+
+        .alert-card.new {
+            animation: slideIn 0.3s ease-out, flashIn 1s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-group">
+            <div class="shield-icon">🛡️</div>
+            <div class="logo-text">Sol<span>Guard</span></div>
+        </div>
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="connectionDot"></div>
+                <span id="connectionStatus">connecting...</span>
+            </div>
+            <div class="status-indicator">
+                <span id="lastPoll">last poll: --</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Programs Monitored</div>
+                <div class="stat-value" id="statPrograms">--</div>
+            </div>
+            <div class="stat-card critical">
+                <div class="stat-label">Critical Alerts</div>
+                <div class="stat-value" id="statCritical">0</div>
+            </div>
+            <div class="stat-card high">
+                <div class="stat-label">High Alerts</div>
+                <div class="stat-value" id="statHigh">0</div>
+            </div>
+            <div class="stat-card medium">
+                <div class="stat-label">Medium Alerts</div>
+                <div class="stat-value" id="statMedium">0</div>
+            </div>
+            <div class="stat-card low">
+                <div class="stat-label">Low Alerts</div>
+                <div class="stat-value" id="statLow">0</div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content-grid">
+            <!-- Alert Feed -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Live Alert Feed</div>
+                    <div class="panel-badge" id="alertCount">0 alerts</div>
+                </div>
+                <div class="panel-body" id="alertFeed">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔭</div>
+                        <div class="empty-state-text">Monitoring... no alerts yet.<br>Trigger a test event or wait for a real one.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div>
+                <!-- Watchlist -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Watchlist</div>
+                        <div class="panel-badge" id="watchlistCount">0 programs</div>
+                    </div>
+                    <div class="panel-body" id="watchlist" style="padding: 0;">
+                        <div class="empty-state">
+                            <div class="empty-state-text">Loading watchlist...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Demo trigger -->
+                <div class="trigger-section">
+                    <button class="btn-trigger" onclick="triggerTest()">
+                        ⚡ SIMULATE AUTHORITY CHANGE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        SolGuard v1.0.0 — Autonomous AI Sentinel for Solana •
+        Powered by <a href="https://anthropic.com" target="_blank">Claude AI</a> •
+        Built for <a href="https://www.colosseum.org" target="_blank">Colosseum Frontier Hackathon</a>
+    </footer>
+
+    <script>
+        // ── Config ─────────────────────────────────────────────
+        const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? `http://${window.location.hostname}:8000`
+            : window.location.origin;
+
+        let alerts = [];
+        let eventSource = null;
+
+        // ── Initialize ─────────────────────────────────────────
+        async function init() {
+            await fetchWatchlist();
+            await fetchAlerts();
+            await fetchStats();
+            connectSSE();
+        }
+
+        // ── Fetch watchlist ────────────────────────────────────
+        async function fetchWatchlist() {
+            try {
+                const res = await fetch(`${API_BASE}/api/watchlist`);
+                const data = await res.json();
+                renderWatchlist(data.programs);
+                document.getElementById('watchlistCount').textContent = `${data.total} programs`;
+            } catch (e) {
+                console.error('Failed to fetch watchlist:', e);
+            }
+        }
+
+        function renderWatchlist(programs) {
+            const el = document.getElementById('watchlist');
+            if (!programs.length) {
+                el.innerHTML = '<div class="empty-state"><div class="empty-state-text">No programs loaded</div></div>';
+                return;
+            }
+            el.innerHTML = programs.map(p => `
+                <div class="program-row">
+                    <div class="program-info">
+                        <div class="program-status-dot ${p.is_immutable ? 'immutable' : 'mutable'}"></div>
+                        <div>
+                            <div class="program-name">${p.name}</div>
+                            <div class="program-authority">${p.authority === 'IMMUTABLE' ? 'IMMUTABLE' : (p.authority?.substring(0, 16) + '...' || 'loading...')}</div>
+                        </div>
+                    </div>
+                    <span class="program-tag ${p.is_immutable ? 'immutable' : 'mutable'}">${p.is_immutable ? 'LOCKED' : 'MUTABLE'}</span>
+                </div>
+            `).join('');
+        }
+
+        // ── Fetch alerts ───────────────────────────────────────
+        async function fetchAlerts() {
+            try {
+                const res = await fetch(`${API_BASE}/api/alerts?limit=50`);
+                const data = await res.json();
+                alerts = data.alerts || [];
+                renderAlerts();
+            } catch (e) {
+                console.error('Failed to fetch alerts:', e);
+            }
+        }
+
+        // ── Fetch stats ────────────────────────────────────────
+        async function fetchStats() {
+            try {
+                const res = await fetch(`${API_BASE}/api/stats`);
+                const data = await res.json();
+                document.getElementById('statPrograms').textContent = data.programs_monitored;
+                document.getElementById('statCritical').textContent = data.critical;
+                document.getElementById('statHigh').textContent = data.high;
+                document.getElementById('statMedium').textContent = data.medium;
+                document.getElementById('statLow').textContent = data.low;
+                if (data.last_poll && data.last_poll !== 'never') {
+                    document.getElementById('lastPoll').textContent = `last poll: ${timeAgo(data.last_poll)}`;
+                }
+            } catch (e) {
+                console.error('Failed to fetch stats:', e);
+            }
+        }
+
+        // ── Render alerts ──────────────────────────────────────
+        function renderAlerts() {
+            const feed = document.getElementById('alertFeed');
+            const badge = document.getElementById('alertCount');
+            badge.textContent = `${alerts.length} alert${alerts.length !== 1 ? 's' : ''}`;
+
+            if (!alerts.length) {
+                feed.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔭</div>
+                        <div class="empty-state-text">Monitoring... no alerts yet.<br>Trigger a test event or wait for a real one.</div>
+                    </div>`;
+                return;
+            }
+
+            feed.innerHTML = alerts.map((a, i) => `
+                <div class="alert-card ${a.risk_level} ${i === 0 ? 'new' : ''}">
+                    <div class="alert-header">
+                        <span class="alert-risk">${a.risk_level}</span>
+                        <span class="alert-time">${timeAgo(a.timestamp)}</span>
+                    </div>
+                    <div class="alert-program">${a.program_name || 'Unknown Program'} • ${a.event_type}</div>
+                    <div class="alert-summary">${a.summary}</div>
+                    ${a.recommended_action ? `<div class="alert-action">→ ${a.recommended_action}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // ── SSE connection ─────────────────────────────────────
+        function connectSSE() {
+            if (eventSource) eventSource.close();
+
+            eventSource = new EventSource(`${API_BASE}/api/stream`);
+
+            eventSource.onopen = () => {
+                document.getElementById('connectionDot').className = 'status-dot';
+                document.getElementById('connectionStatus').textContent = 'live';
+            };
+
+            eventSource.onmessage = (e) => {
+                try {
+                    const data = JSON.parse(e.data);
+
+                    if (data.type === 'alert') {
+                        alerts.unshift(data.alert);
+                        if (alerts.length > 100) alerts.pop();
+                        renderAlerts();
+                        fetchStats();
+                    } else if (data.type === 'watchlist_update') {
+                        renderWatchlist(data.programs);
+                        document.getElementById('lastPoll').textContent = `last poll: just now`;
+                    }
+                } catch (err) {
+                    // keepalive or parse error, ignore
+                }
+            };
+
+            eventSource.onerror = () => {
+                document.getElementById('connectionDot').className = 'status-dot disconnected';
+                document.getElementById('connectionStatus').textContent = 'reconnecting...';
+                setTimeout(connectSSE, 3000);
+            };
+        }
+
+        // ── Trigger test ───────────────────────────────────────
+        async function triggerTest() {
+            try {
+                const btn = document.querySelector('.btn-trigger');
+                btn.textContent = '⚡ SENDING...';
+                btn.disabled = true;
+
+                await fetch(`${API_BASE}/api/trigger-test`, { method: 'POST' });
+
+                btn.textContent = '✓ EVENT QUEUED';
+                setTimeout(() => {
+                    btn.textContent = '⚡ SIMULATE AUTHORITY CHANGE';
+                    btn.disabled = false;
+                }, 2000);
+            } catch (e) {
+                console.error('Trigger failed:', e);
+            }
+        }
+
+        // ── Time formatting ────────────────────────────────────
+        function timeAgo(isoString) {
+            if (!isoString) return '--';
+            const now = new Date();
+            const then = new Date(isoString);
+            const diff = Math.floor((now - then) / 1000);
+
+            if (diff < 5) return 'just now';
+            if (diff < 60) return `${diff}s ago`;
+            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+            return then.toLocaleDateString();
+        }
+
+        // ── Auto-refresh stats every 30s ───────────────────────
+        setInterval(fetchStats, 30000);
+        setInterval(fetchWatchlist, 60000);
+
+        // ── Boot ───────────────────────────────────────────────
+        init();
+    </script>
+</body>
+</html>
