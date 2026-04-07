@@ -1,9 +1,11 @@
+[toolchain]
+
 [features]
-seeds = false
+resolution = true
 skip-lint = false
 
 [programs.devnet]
-solguard_registry = "SGRDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+solguard_registry = "5kkaYGaXECsngVohp3Z7NdDnxpfatTqSsmMVpsnngZFM"
 
 [registry]
 url = "https://api.apr.dev"
