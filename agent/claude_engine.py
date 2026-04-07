@@ -14,23 +14,46 @@ load_dotenv()
 
 SYSTEM_PROMPT = """You are SolGuard's autonomous security analyst for the Solana blockchain.
 
-Your job: analyze program upgrade events and assess the risk to DeFi users.
+Your job: analyze program upgrade events and assess the risk to DeFi users and integrators.
 
 ## Context
-Solana programs are upgradeable by default. The "upgrade authority" is a public key that can
-redeploy new bytecode to a program at any time. If an attacker gains control of the upgrade
-authority, they can replace the program with malicious code — draining all funds held by the
-protocol. This happened during the FTX collapse (Nov 2022) when Serum's upgrade authority was
-compromised.
+Solana programs are upgradeable by default via BPFLoaderUpgradeable. The "upgrade authority" is a
+public key that can redeploy new bytecode at any time. If an attacker gains control of the upgrade
+authority, they can replace the program with malicious code — draining all funds held by the protocol.
 
-## Known high-risk patterns
-- Authority transfer to unknown wallet → HIGH or CRITICAL
-- Authority transfer during market volatility → CRITICAL
-- Program upgrade within 24h of large deposit activity → HIGH
-- Buffer account loaded without prior governance vote → HIGH
-- Authority transferred to a wallet with no prior protocol history → CRITICAL
-- Authority set to null / burned (immutable) → LOW (this is actually good)
-- Authority moved to a known multisig (e.g., Squads) → LOW
+Historical precedent: During the FTX collapse (Nov 2022), Serum's upgrade authority was compromised,
+putting $100M+ at risk. The community had to emergency-fork the program. There was no automated
+detection system in place.
+
+## Known risk patterns (use these for scoring)
+
+### CRITICAL indicators
+- Authority transferred to an unknown wallet with no prior on-chain history
+- Authority transferred during high market volatility or a known exploit in progress
+- Authority change + large fund movements in the same slot range
+- New authority is an EOA (externally owned account) rather than a multisig/PDA
+
+### HIGH indicators
+- Program bytecode upgrade (UPGRADE event) without a matching governance proposal
+- Authority transferred to a new key without public announcement
+- Buffer account initialized (INITIALIZE_BUFFER) on a high-TVL program
+- Authority change on a program that was previously immutable (re-enabled somehow)
+
+### MEDIUM indicators
+- Buffer account activity that may precede an upgrade
+- Authority transferred between known team wallets (routine rotation)
+- Scheduled maintenance upgrade with governance approval
+
+### LOW indicators
+- Authority burned (set to null) — program becomes immutable. This is POSITIVE.
+- Authority moved to a Squads multisig (addresses owned by SMPLecH534NA9acpos4G6x7uf3LWbCAwZQE9e8ZekMu
+  or SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf). This is a SECURITY UPGRADE.
+- Routine governance-approved upgrade with matching Realms/Squads proposal
+
+## Squads Multisig Detection
+If the metadata field "new_authority_is_multisig" is true, this means the new authority is a
+Squads multisig wallet. This is almost always a positive security action (moving from single-key
+to multi-signature control). Score as LOW unless other red flags are present.
 
 ## Response format
 Respond ONLY with a valid JSON object. No markdown fences, no explanation outside JSON.
@@ -48,11 +71,13 @@ def _mock_analysis(event: dict) -> dict:
     """
     Deterministic mock response used when Claude API is unavailable.
     Provides realistic risk assessments based on event patterns.
+    Now includes Squads multisig detection.
     """
     event_type = event.get("type", "UNKNOWN")
     new_auth = event.get("new_authority", "")
     old_auth = event.get("old_authority", "")
     program_id = event.get("program_id", "unknown")
+    is_multisig = event.get("new_authority_is_multisig", False)
 
     is_suspicious = (
         "Unknown" in new_auth
@@ -73,6 +98,21 @@ def _mock_analysis(event: dict) -> dict:
             ),
             "recommended_action": "No action needed. Program is now immutable and cannot be upgraded.",
             "indicators": ["authority_burned", "immutable"],
+            "program_id": program_id,
+            "tx_signature": event.get("tx_signature", "unknown"),
+            "source": "mock",
+        }
+    elif event_type == "SET_AUTHORITY" and is_multisig:
+        return {
+            "risk_level": "LOW",
+            "summary": f"Program {program_id[:16]}... authority migrated to a Squads multisig — security upgrade.",
+            "details": (
+                "The upgrade authority has been transferred to a Squads multisig wallet. "
+                "This is a positive security action: program upgrades now require multiple signers, "
+                "reducing single-point-of-failure risk. This pattern is recommended by Solana security best practices."
+            ),
+            "recommended_action": "No immediate action needed. Verify the multisig configuration matches the protocol's governance structure.",
+            "indicators": ["squads_multisig", "security_upgrade", "multi_signature"],
             "program_id": program_id,
             "tx_signature": event.get("tx_signature", "unknown"),
             "source": "mock",
@@ -139,12 +179,16 @@ async def analyze_event(event: dict) -> dict:
     """
     Calls Claude to analyze a Solana program upgrade event.
     Falls back to mock analysis if the API is unavailable.
+    Includes multisig enrichment data when available.
     """
     api_key = os.getenv("ANTHROPIC_API_KEY", "")
 
     if not api_key or api_key == "your_key_here":
         print("  ⚠️  No API key — using mock analysis")
         return _mock_analysis(event)
+
+    is_multisig = event.get("new_authority_is_multisig", False)
+    multisig_info = "Yes — Squads multisig detected (security upgrade)" if is_multisig else "No / Unknown"
 
     start = time.time()
     try:
@@ -162,6 +206,7 @@ Program ID: {event.get('program_id', 'unknown')}
 Event type: {event.get('type', 'unknown')}
 Old authority: {event.get('old_authority', 'N/A')}
 New authority: {event.get('new_authority', 'N/A')}
+New authority is multisig: {multisig_info}
 Transaction: {event.get('tx_signature', 'unknown')}
 Slot: {event.get('slot', 0)}
 

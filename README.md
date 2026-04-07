@@ -97,16 +97,25 @@ Every detected event is sent to **Claude AI** with full context:
 
 Claude returns a structured risk assessment with a severity level, human-readable summary, technical details, and recommended actions for protocol users.
 
-## Watched Protocols
+## Watched Protocols (15 programs)
 
-| Protocol | Program ID | TVL |
-|----------|-----------|-----|
-| Jupiter v6 | `JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4` | $2B+ |
-| Raydium AMM | `675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8` | $1B+ |
-| Orca Whirlpool | `whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc` | $500M+ |
-| Kamino Lending | `KLend2g3cP87fffoy8q1mQqGKjrL1AMLkohkowi9oec` | $1B+ |
-| Drift Protocol | `dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH` | $500M+ |
-| Marinade Finance | `MarBmsSgKXdrN1egZf5sqe1TMai9K1rChYNDJgjq7aD` | $1B+ |
+| Protocol | Program ID | Category |
+|----------|-----------|----------|
+| Jupiter v6 | `JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4` | DEX |
+| Jupiter Perps | `PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu` | Perps |
+| Raydium AMM | `675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8` | DEX |
+| Raydium CLMM | `CAMMCzo5YL8w4VFF8KVHr7wifgk7jfhELM25LNNrsEgc` | DEX |
+| Orca Whirlpool | `whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc` | DEX |
+| Meteora DLMM | `LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo` | DEX |
+| Kamino Lending | `KLend2g3cP87fffoy8q1mQqGKjrL1AMLkohkowi9oec` | Lending |
+| Marginfi | `MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA` | Lending |
+| Drift Protocol | `dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH` | Perps |
+| Marinade Finance | `MarBmsSgKXdrN1egZf5sqe1TMai9K1rChYNDJgjq7aD` | Staking |
+| Sanctum (Infinity) | `5ocnV1qiCgaQR8Jb8xWnVbApfaygJ8tNoZfgPwsgx9kx` | Staking |
+| PumpFun | `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P` | Launchpad |
+| Pyth Oracle | `FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH` | Oracle |
+| Wormhole | `worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth` | Bridge |
+| Squads v4 | `SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf` | Governance |
 
 ## Quick Start
 
@@ -175,28 +184,50 @@ solguard/
 │   ├── claude_engine.py        # Claude AI risk scoring engine
 │   ├── database.py             # SQLite persistent alert storage
 │   ├── metrics.py              # Prometheus metrics
+│   ├── onchain_writer.py       # Bridge to on-chain Anchor registry
 │   └── watchers/
-│       └── upgrade_authority.py # Solana PDA reader + watchlist
+│       └── upgrade_authority.py # Solana PDA reader, watchlist, Squads detection
+├── programs/
+│   └── solguard-registry/
+│       ├── Cargo.toml
+│       └── src/lib.rs          # Anchor program: on-chain alert registry
 ├── dashboard/
-│   └── index.html              # Real-time monitoring dashboard
+│   └── index.html              # Real-time monitoring dashboard (Vercel-ready)
+├── scripts/
+│   └── setup_telegram.sh       # Telegram bot setup helper
 ├── docs/
 │   └── solguard-banner.svg     # Project banner
+├── Anchor.toml                 # Anchor configuration
 ├── docker-compose.yml
 ├── Dockerfile
+├── vercel.json
 ├── requirements.txt
 └── .env.example
 ```
+
+## Key Features
+
+- **15 DeFi protocols** monitored on Solana mainnet
+- **Dual detection**: Helius webhooks (real-time push) + RPC polling (every 30s)
+- **Claude AI risk scoring** with Solana-specific exploit pattern knowledge
+- **Squads multisig detection** — automatically identifies security upgrades vs threats
+- **On-chain alert registry** (Anchor program) — immutable, verifiable detection history
+- **Live dashboard** with SSE streaming, expandable alerts, demo mode
+- **Multi-channel alerts**: Discord webhooks, Telegram Bot API
+- **SQLite persistence** with WAL mode for fast writes
 
 ## Tech Stack
 
 - **Runtime**: Python 3.13, FastAPI, Uvicorn
 - **AI**: Claude Sonnet 4 via Anthropic API
 - **Blockchain**: Solana mainnet via Helius RPC
+- **On-chain**: Anchor framework (Rust) for alert registry program
 - **Real-time**: Helius webhooks + Server-Sent Events (SSE)
-- **Storage**: SQLite (WAL mode)
+- **Storage**: SQLite (WAL mode) + on-chain PDAs
+- **Security**: Squads v3/v4 multisig detection
 - **Monitoring**: Prometheus metrics
 - **Notifications**: Discord webhooks, Telegram Bot API
-- **Infrastructure**: Docker, ngrok
+- **Infrastructure**: Docker, Vercel, ngrok
 
 ## Demo
 
@@ -210,12 +241,16 @@ This simulates a suspicious authority change on Jupiter v6, triggering the full 
 
 ## Roadmap
 
-- [ ] On-chain alert registry (Solana program for immutable alert history)
-- [ ] Multi-chain support (Ethereum, Base, Arbitrum)
-- [ ] Governance vote cross-referencing (Realms, Squads)
+- [x] On-chain alert registry (Anchor program for immutable alert history)
+- [x] Squads multisig detection (automatic security upgrade recognition)
+- [x] Expanded watchlist (15 major protocols across DEX, lending, staking, oracles)
+- [ ] Deploy registry program to devnet/mainnet
+- [ ] Governance vote cross-referencing (Realms, Squads proposals)
 - [ ] Historical authority change timeline per program
-- [ ] Community-driven watchlist submissions
+- [ ] Multi-chain support (Ethereum, Base, Arbitrum)
+- [ ] Community-driven watchlist submissions via on-chain voting
 - [ ] Browser extension for real-time alerts
+- [ ] Bytecode diffing on UPGRADE events
 
 ## Built For
 

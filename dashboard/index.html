@@ -284,7 +284,7 @@
     </div>
     <main>
         <div class="stats-grid">
-            <div class="stat-card"><div class="stat-label">Programs Monitored</div><div class="stat-value" id="statPrograms">6</div></div>
+            <div class="stat-card"><div class="stat-label">Programs Monitored</div><div class="stat-value" id="statPrograms">15</div></div>
             <div class="stat-card critical"><div class="stat-label">Critical</div><div class="stat-value" id="statCritical">0</div></div>
             <div class="stat-card high"><div class="stat-label">High</div><div class="stat-value" id="statHigh">0</div></div>
             <div class="stat-card medium"><div class="stat-label">Medium</div><div class="stat-value" id="statMedium">0</div></div>
@@ -307,7 +307,7 @@
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">Watchlist</div>
-                        <div class="panel-badge" id="watchlistCount">6 programs</div>
+                        <div class="panel-badge" id="watchlistCount">15 programs</div>
                     </div>
                     <div class="panel-body" id="watchlist" style="padding: 0;"></div>
                 </div>
@@ -341,19 +341,30 @@
 
         const DEMO_PROGRAMS=[
             {name:"Jupiter v6",program_id:"JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",authority:"CvQZZ23qYDWF2RUpxYJ8...",is_immutable:false},
+            {name:"Jupiter Perps",program_id:"PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu",authority:"7dGbd2QZ...",is_immutable:false},
             {name:"Raydium AMM",program_id:"675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",authority:"GThUX1Atko4tqhN2NaiT...",is_immutable:false},
+            {name:"Raydium CLMM",program_id:"CAMMCzo5YL8w4VFF8KVHr7wifgk7jfhELM25LNNrsEgc",authority:"Hk3SdYTJ...",is_immutable:false},
             {name:"Orca Whirlpool",program_id:"whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc",authority:"GwH3Hiv5mACLX3ufTw1p...",is_immutable:false},
+            {name:"Meteora DLMM",program_id:"LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo",authority:"5unTfT2W...",is_immutable:false},
             {name:"Kamino Lending",program_id:"KLend2g3cP87fffoy8q1mQqGKjrL1AMLkohkowi9oec",authority:"IMMUTABLE",is_immutable:true},
+            {name:"Marginfi",program_id:"MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA",authority:"LipsxuAk...",is_immutable:false},
             {name:"Drift Protocol",program_id:"dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH",authority:"GA5aPX7hFNaxoi8akdbc...",is_immutable:false},
             {name:"Marinade Finance",program_id:"MarBmsSgKXdrN1egZf5sqe1TMai9K1rChYNDJgjq7aD",authority:"551FBXSXdhcRDDkdcb3T...",is_immutable:false},
+            {name:"Sanctum",program_id:"5ocnV1qiCgaQR8Jb8xWnVbApfaygJ8tNoZfgPwsgx9kx",authority:"3Fz8rBJ...",is_immutable:false},
+            {name:"PumpFun",program_id:"6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",authority:"TSLvdd1...",is_immutable:false},
+            {name:"Pyth Oracle",program_id:"FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH",authority:"IMMUTABLE",is_immutable:true},
+            {name:"Wormhole",program_id:"worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth",authority:"IMMUTABLE",is_immutable:true},
+            {name:"Squads v4",program_id:"SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",authority:"IMMUTABLE",is_immutable:true},
         ];
 
         const DEMO_ALERTS=[
             {risk_level:"CRITICAL",program_name:"Jupiter v6",event_type:"SET_AUTHORITY",summary:"Upgrade authority for JUP6LkbZbjS1jK... transferred to an unrecognized wallet.",details:"The program's upgrade authority has been moved to a wallet with no known protocol history. This mirrors the attack vector that compromised protocols during the FTX collapse in November 2022. Any protocol integrating this program should treat it as potentially compromised.",recommended_action:"Pause integrations immediately. Verify the new authority on-chain. Contact the protocol team via official channels.",source:"claude"},
             {risk_level:"HIGH",program_name:"Raydium AMM",event_type:"UPGRADE",summary:"Program bytecode redeployment detected on 675kPX9MHTjS2zt...",details:"A new version of the program has been deployed to mainnet. All instruction interfaces may have changed. Downstream integrators should re-audit before continuing operations.",recommended_action:"Freeze new deposits until the upgrade is reviewed. Pull the new IDL and diff against the previous version.",source:"claude"},
-            {risk_level:"MEDIUM",program_name:"Drift Protocol",event_type:"INITIALIZE_BUFFER",summary:"Buffer account initialization detected on dRiftyHA39MWEi3...",details:"A buffer account has been loaded that may precede a program upgrade. This is a preparatory step that warrants monitoring.",recommended_action:"Monitor for a follow-up UPGRADE event. No immediate action required.",source:"mock"},
+            {risk_level:"LOW",program_name:"Drift Protocol",event_type:"SET_AUTHORITY",summary:"Drift Protocol authority migrated to Squads multisig — security upgrade confirmed.",details:"The upgrade authority has been transferred to a Squads v4 multisig wallet. This is a positive security action: program upgrades now require multiple signers, reducing single-point-of-failure risk. Squads multisig detected and verified on-chain.",recommended_action:"No immediate action needed. Verify the multisig configuration matches Drift's governance structure.",source:"claude"},
+            {risk_level:"MEDIUM",program_name:"Meteora DLMM",event_type:"INITIALIZE_BUFFER",summary:"Buffer account initialization detected on LBUZKhRxPF3XUp...",details:"A buffer account has been loaded that may precede a program upgrade. This is a preparatory step that warrants monitoring.",recommended_action:"Monitor for a follow-up UPGRADE event. No immediate action required.",source:"mock"},
             {risk_level:"LOW",program_name:"Kamino Lending",event_type:"SET_AUTHORITY",summary:"Program KLend2g3cP87fff... authority confirmed burned — now immutable.",details:"The upgrade authority has been set to null, making the program permanently immutable. This is a positive security action that prevents any future code changes.",recommended_action:"No action needed. Program is now immutable and cannot be upgraded.",source:"claude"},
-            {risk_level:"HIGH",program_name:"Orca Whirlpool",event_type:"SET_AUTHORITY",summary:"Upgrade authority change detected on whirLbMiicVdio4q...",details:"Authority transferred to a new key. May be a routine governance migration to Squads multisig, but requires verification against governance proposals.",recommended_action:"Monitor the new authority wallet. Check Orca governance channels for announcements.",source:"claude"},
+            {risk_level:"HIGH",program_name:"Marginfi",event_type:"SET_AUTHORITY",summary:"Upgrade authority change detected on MFv2hWf31Z9kbCa...",details:"Authority transferred to a new key without a matching governance proposal. The new wallet has no prior on-chain history with the Marginfi protocol.",recommended_action:"Monitor the new authority wallet. Check Marginfi governance channels for announcements. Consider reducing exposure.",source:"claude"},
+            {risk_level:"CRITICAL",program_name:"PumpFun",event_type:"UPGRADE",summary:"Emergency bytecode redeployment on PumpFun during high trading volume.",details:"Program bytecode was replaced during a period of unusually high trading activity. The upgrade was not preceded by any public governance proposal or announcement. All instruction interfaces may have changed without warning.",recommended_action:"Halt all interactions with PumpFun immediately. Wait for official team communication. Audit the new bytecode before resuming.",source:"claude"},
         ];
 
         function init(){
@@ -390,7 +401,7 @@
             document.getElementById('connectionDot').className='status-dot demo';
             document.getElementById('connectionStatus').textContent='demo';
             renderWatchlist(DEMO_PROGRAMS);
-            updateStats({programs_monitored:6,critical:0,high:0,medium:0,low:0});
+            updateStats({programs_monitored:15,critical:0,high:0,medium:0,low:0});
             let idx=0;
             function pushNext(){
                 if(idx>=DEMO_ALERTS.length)idx=0;
@@ -398,7 +409,7 @@
                     program_id:DEMO_PROGRAMS.find(p=>p.name===DEMO_ALERTS[idx].program_name)?.program_id||'unknown'};
                 alerts.unshift(a);if(alerts.length>50)alerts.pop();
                 renderAlerts();
-                const s={programs_monitored:6,critical:0,high:0,medium:0,low:0};
+                const s={programs_monitored:15,critical:0,high:0,medium:0,low:0};
                 alerts.forEach(x=>{const k=x.risk_level.toLowerCase();if(s[k]!==undefined)s[k]++;});
                 updateStats(s);idx++;
             }
@@ -505,7 +516,7 @@
         async function triggerTest(){
             if(isDemo){const r=DEMO_ALERTS[Math.floor(Math.random()*DEMO_ALERTS.length)];
                 alerts.unshift({...r,id:crypto.randomUUID(),timestamp:new Date().toISOString()});renderAlerts();
-                const s={programs_monitored:6,critical:0,high:0,medium:0,low:0};
+                const s={programs_monitored:15,critical:0,high:0,medium:0,low:0};
                 alerts.forEach(x=>{const k=x.risk_level.toLowerCase();if(s[k]!==undefined)s[k]++;});updateStats(s);return;}
             if(!API_BASE){return;}
             try{const btn=document.querySelector('.btn-trigger');btn.textContent='⚡ SENDING...';btn.disabled=true;

@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
-from .watchers.upgrade_authority import get_upgrade_authority, WATCHED_PROGRAMS
+from .watchers.upgrade_authority import get_upgrade_authority, check_authority_is_multisig, WATCHED_PROGRAMS
 from .claude_engine import analyze_event
 from .database import Database, AlertRecord
 from .metrics import alerts_total, programs_monitored, upgrade_events
@@ -279,11 +279,16 @@ async def poll_loop():
                 elif prev != authority:
                     print(f"  🚨 AUTHORITY CHANGE on {name}!")
                     upgrade_events.inc()
+
+                    # Enrich with Squads multisig detection
+                    multisig_info = await check_authority_is_multisig(client, authority)
+
                     event = {
                         "type": "SET_AUTHORITY",
                         "program_id": program_id,
                         "old_authority": prev,
                         "new_authority": authority,
+                        "new_authority_is_multisig": multisig_info.get("is_multisig", False),
                         "tx_signature": "detected_via_polling",
                         "slot": 0,
                     }
