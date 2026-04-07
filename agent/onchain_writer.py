@@ -18,7 +18,7 @@ load_dotenv()
 # Program ID — update after `anchor deploy`
 REGISTRY_PROGRAM_ID = os.getenv(
     "SOLGUARD_PROGRAM_ID",
-    "SGRDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    "5kkaYGaXECsngVohp3Z7NdDnxpfatTqSsmMVpsnngZFM"
 )
 
 RISK_LEVEL_MAP = {"LOW": 0, "MEDIUM": 1, "HIGH": 2, "CRITICAL": 3}
