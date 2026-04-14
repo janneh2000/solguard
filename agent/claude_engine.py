@@ -21,9 +21,22 @@ Solana programs are upgradeable by default via BPFLoaderUpgradeable. The "upgrad
 public key that can redeploy new bytecode at any time. If an attacker gains control of the upgrade
 authority, they can replace the program with malicious code — draining all funds held by the protocol.
 
-Historical precedent: During the FTX collapse (Nov 2022), Serum's upgrade authority was compromised,
-putting $100M+ at risk. The community had to emergency-fork the program. There was no automated
-detection system in place.
+## CRITICAL: Recent Real-World Attack Patterns
+
+### The Drift Protocol Hack (April 1, 2026) — $285M stolen
+- DPRK state-sponsored hackers (UNC4736) executed a 6-month social engineering campaign
+- Attackers posed as a quant trading firm, built trust at crypto conferences over months
+- Compromised 2 of 5 multisig signers through malicious code repos and TestFlight apps
+- Used DURABLE NONCE TRANSACTIONS to pre-sign admin transfers days before execution
+- Migrated Security Council to a new 2/5 multisig with ZERO TIMELOCK
+- Created a fake token (CarbonVote) and manipulated oracles to use as collateral
+- Drained $285M in 10 seconds once pre-signed transactions were triggered
+- KEY LESSON: The vulnerability was NOT in smart contracts — it was in governance and human trust
+
+### The Serum/FTX Incident (November 2022)
+- Serum's upgrade authority was compromised during the FTX collapse
+- Community had to emergency-fork the program to prevent exploitation
+- No automated detection system existed at the time
 
 ## Known risk patterns (use these for scoring)
 
@@ -32,28 +45,36 @@ detection system in place.
 - Authority transferred during high market volatility or a known exploit in progress
 - Authority change + large fund movements in the same slot range
 - New authority is an EOA (externally owned account) rather than a multisig/PDA
+- Security Council or admin multisig migration with zero timelock (Drift attack pattern)
+- Durable nonce accounts created targeting program authorities (pre-signed attack staging)
+- Multiple authority changes on the same program in a short time window
+- Authority change immediately after a multisig threshold reduction
 
 ### HIGH indicators
 - Program bytecode upgrade (UPGRADE event) without a matching governance proposal
 - Authority transferred to a new key without public announcement
 - Buffer account initialized (INITIALIZE_BUFFER) on a high-TVL program
-- Authority change on a program that was previously immutable (re-enabled somehow)
+- Authority change on a program that was previously immutable
+- Multisig threshold reduced (e.g., 4/7 → 2/5) without governance vote
+- New durable nonce accounts created by addresses interacting with watched programs
 
 ### MEDIUM indicators
 - Buffer account activity that may precede an upgrade
 - Authority transferred between known team wallets (routine rotation)
 - Scheduled maintenance upgrade with governance approval
+- Multisig signer rotation with proper timelock
 
 ### LOW indicators
 - Authority burned (set to null) — program becomes immutable. This is POSITIVE.
 - Authority moved to a Squads multisig (addresses owned by SMPLecH534NA9acpos4G6x7uf3LWbCAwZQE9e8ZekMu
   or SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf). This is a SECURITY UPGRADE.
 - Routine governance-approved upgrade with matching Realms/Squads proposal
+- Timelock increase on admin operations
 
 ## Squads Multisig Detection
 If the metadata field "new_authority_is_multisig" is true, this means the new authority is a
-Squads multisig wallet. This is almost always a positive security action (moving from single-key
-to multi-signature control). Score as LOW unless other red flags are present.
+Squads multisig wallet. This is almost always a positive security action. Score as LOW unless
+other red flags are present (e.g., zero timelock configuration like the Drift attack).
 
 ## Response format
 Respond ONLY with a valid JSON object. No markdown fences, no explanation outside JSON.
@@ -61,9 +82,10 @@ Respond ONLY with a valid JSON object. No markdown fences, no explanation outsid
 {
   "risk_level": "LOW|MEDIUM|HIGH|CRITICAL",
   "summary": "One sentence: what happened and why it matters.",
-  "details": "2-3 sentences of technical context. Reference specific on-chain patterns.",
+  "details": "2-3 sentences of technical context. Reference specific real-world attack patterns when relevant.",
   "recommended_action": "Concrete steps for protocol users and integrators.",
-  "indicators": ["list", "of", "risk", "indicators", "detected"]
+  "indicators": ["list", "of", "risk", "indicators", "detected"],
+  "attack_pattern_match": "none|serum_ftx|drift_dprk|generic_authority_hijack"
 }"""
 
 

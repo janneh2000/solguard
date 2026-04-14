@@ -20,6 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 from .watchers.upgrade_authority import get_upgrade_authority, check_authority_is_multisig, WATCHED_PROGRAMS
+from .watchers.nonce_monitor import scan_all_authorities as scan_nonce_activity
 from .claude_engine import analyze_event
 from .database import Database, AlertRecord
 from .metrics import alerts_total, programs_monitored, upgrade_events
@@ -313,6 +314,32 @@ async def poll_loop():
                 for name, pid in WATCHED_PROGRAMS.items()
             ],
         })
+
+        # ── Durable nonce scan (every 5th cycle ≈ 2.5 min) ──────────────
+        # Detects the Drift hack pattern: pre-signed transactions via durable nonces
+        poll_count = getattr(poll_loop, '_count', 0) + 1
+        poll_loop._count = poll_count
+
+        if poll_count % 5 == 0:
+            try:
+                print("🔍 Scanning for durable nonce activity (Drift attack pattern)...")
+                nonce_events = await scan_nonce_activity(client, authority_cache, WATCHED_PROGRAMS)
+                for nonce_event in nonce_events:
+                    print(f"  🚨 NONCE ACTIVITY: {nonce_event['program_name']}")
+                    # Process as a HIGH risk event
+                    await process_event({
+                        "type": "DURABLE_NONCE_ACTIVITY",
+                        "program_id": nonce_event.get("authority", "unknown"),
+                        "old_authority": "",
+                        "new_authority": "",
+                        "tx_signature": nonce_event.get("tx_signature", "unknown"),
+                        "slot": nonce_event.get("slot", 0),
+                        "risk_note": nonce_event.get("risk_note", ""),
+                    })
+                if not nonce_events:
+                    print("  ✅ No suspicious nonce activity")
+            except Exception as e:
+                print(f"  ⚠️  Nonce scan error: {e}")
 
         await asyncio.sleep(POLL_INTERVAL)
 

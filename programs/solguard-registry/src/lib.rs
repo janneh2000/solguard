@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("5kkaYGaXECsngVohp3Z7NdDnxpfatTqSsmMVpsnngZFM");
+declare_id!("SGRDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 
 /// SolGuard Registry — On-chain immutable alert history
 ///

@@ -29,15 +29,19 @@
 
 Every Solana program is **upgradeable by default**. The holder of a program's *upgrade authority* key can redeploy new bytecode at any time — silently replacing the code that controls billions in user funds.
 
-This is exactly what happened during the **FTX collapse** (November 2022), when Serum's upgrade authority was compromised, putting the entire Solana DeFi ecosystem at risk.
+**This keeps happening:**
 
-**Today, there is no real-time monitoring system** that watches for these authority changes across major protocols and alerts the community before damage is done.
+- **April 1, 2026 — Drift Protocol ($285M stolen)**: DPRK state-sponsored hackers (UNC4736) ran a 6-month social engineering campaign, compromising multisig signers through malicious code repos and pre-signed durable nonce transactions. The attack drained $285M in 10 seconds. The vulnerability was not in smart contracts — it was in governance and human trust.
+
+- **November 2022 — Serum/FTX ($100M+ at risk)**: Serum's upgrade authority was compromised during the FTX collapse, threatening the entire Solana DeFi ecosystem. The community had to emergency-fork the program.
+
+**There is still no real-time monitoring system** that watches for authority changes, durable nonce staging, and multisig manipulation across major protocols — and alerts the community before damage is done.
 
 ## The Solution
 
-**SolGuard** is an autonomous AI sentinel that monitors Solana program upgrade authority changes in real time and uses Claude AI to assess the risk of each event.
+**SolGuard** is an autonomous AI sentinel that monitors Solana program upgrade authority changes in real time and uses Claude AI to assess the risk of each event — trained on real exploit patterns including the Drift hack and Serum incident.
 
-It watches the upgrade authorities of major DeFi protocols on Solana mainnet and instantly alerts users via a live dashboard, Discord, and Telegram when something changes — with an AI-powered risk assessment explaining *what happened* and *what to do about it*.
+It watches 15 major DeFi protocols on Solana mainnet, detects suspicious durable nonce activity (the Drift attack pattern), identifies Squads multisig migrations, and instantly alerts users via a live dashboard, Discord, and Telegram with AI-powered risk assessments explaining *what happened* and *what to do about it*.
 
 ## How It Works
 
@@ -186,7 +190,8 @@ solguard/
 │   ├── metrics.py              # Prometheus metrics
 │   ├── onchain_writer.py       # Bridge to on-chain Anchor registry
 │   └── watchers/
-│       └── upgrade_authority.py # Solana PDA reader, watchlist, Squads detection
+│       ├── upgrade_authority.py # Solana PDA reader, watchlist, Squads detection
+│       └── nonce_monitor.py     # Durable nonce scanning (Drift attack pattern)
 ├── programs/
 │   └── solguard-registry/
 │       ├── Cargo.toml
@@ -209,9 +214,11 @@ solguard/
 
 - **15 DeFi protocols** monitored on Solana mainnet
 - **Dual detection**: Helius webhooks (real-time push) + RPC polling (every 30s)
-- **Claude AI risk scoring** with Solana-specific exploit pattern knowledge
+- **Claude AI risk scoring** trained on real exploit patterns (Drift $285M hack, Serum/FTX)
+- **Durable nonce monitoring** — detects the Drift attack pattern (pre-signed transaction staging)
 - **Squads multisig detection** — automatically identifies security upgrades vs threats
-- **On-chain alert registry** (Anchor program) — immutable, verifiable detection history
+- **Attack pattern matching** — Claude classifies events against known DPRK, FTX-era, and generic hijack patterns
+- **On-chain alert registry** (Anchor program) — immutable, verifiable detection history on Solana devnet
 - **Live dashboard** with SSE streaming, expandable alerts, demo mode
 - **Multi-channel alerts**: Discord webhooks, Telegram Bot API
 - **SQLite persistence** with WAL mode for fast writes
@@ -241,10 +248,11 @@ This simulates a suspicious authority change on Jupiter v6, triggering the full 
 
 ## Roadmap
 
-- [x] On-chain alert registry (Anchor program for immutable alert history)
+- [x] On-chain alert registry (Anchor program deployed to devnet)
 - [x] Squads multisig detection (automatic security upgrade recognition)
 - [x] Expanded watchlist (15 major protocols across DEX, lending, staking, oracles)
-- [ ] Deploy registry program to devnet/mainnet
+- [x] Durable nonce monitoring (Drift attack pattern detection)
+- [x] Attack pattern matching (Drift/DPRK, Serum/FTX, generic hijack classification)
 - [ ] Governance vote cross-referencing (Realms, Squads proposals)
 - [ ] Historical authority change timeline per program
 - [ ] Multi-chain support (Ethereum, Base, Arbitrum)
