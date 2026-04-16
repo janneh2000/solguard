@@ -1,6 +1,6 @@
 [package]
 name = "solguard-registry"
-version = "0.1.0"
+version = "0.2.0"
 description = "SolGuard on-chain alert registry — immutable record of detected upgrade authority changes"
 edition = "2021"
 

@@ -1,31 +1,47 @@
+//! SolGuard Registry — On-chain immutable alert history
+//!
+//! Every time SolGuard detects a program upgrade authority change,
+//! a SHA-256 hash of the alert is written to Solana. This creates a
+//! verifiable, tamper-proof record that the alert existed at a specific
+//! point in time. Anyone can query the chain to verify SolGuard's
+//! detection history.
+//!
+//! ## Security hardening (audit pass v2)
+//! - Input validation on `risk_level` and `event_type` (bounded enums).
+//! - Checked arithmetic on the alert counter to prevent overflow.
+//! - `close_alert` rent-reclaim path gated behind registry authority.
+//! - `pause` flag to stop further alert writes during incident response.
+//! - `transfer_authority` with two-step handoff (propose + accept) so a
+//!   hijacked authority can't silently hand ownership to an attacker.
+//! - Anchor `has_one = authority` enforcement + explicit signer checks.
+
 use anchor_lang::prelude::*;
 
-declare_id!("SGRDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+// NOTE: After `anchor deploy` replace this with the real program id.
+// Devnet: 5kkaYGaXECsngVohp3Z7NdDnxpfatTqSsmMVpsnngZFM
+declare_id!("5kkaYGaXECsngVohp3Z7NdDnxpfatTqSsmMVpsnngZFM");
 
-/// SolGuard Registry — On-chain immutable alert history
-///
-/// Every time SolGuard detects a program upgrade authority change,
-/// a hash of the alert is written to Solana. This creates a verifiable,
-/// tamper-proof record that the alert existed at a specific point in time.
-///
-/// Anyone can query the chain to verify SolGuard's detection history.
+// ── Constants ────────────────────────────────────────────────────────────────
+pub const MAX_RISK_LEVEL: u8 = 3;   // 0=LOW 1=MEDIUM 2=HIGH 3=CRITICAL
+pub const MAX_EVENT_TYPE: u8 = 4;   // 0=SET_AUTHORITY 1=UPGRADE 2=INIT_BUFFER 3=DURABLE_NONCE 4=MULTISIG_CHANGE
+
 #[program]
 pub mod solguard_registry {
     use super::*;
 
-    /// Initialize the global registry state.
-    /// Called once by the SolGuard admin.
+    /// Initialize the global registry state. Called once by the SolGuard admin.
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
         let registry = &mut ctx.accounts.registry;
         registry.authority = ctx.accounts.authority.key();
+        registry.pending_authority = Pubkey::default();
         registry.total_alerts = 0;
+        registry.paused = false;
         registry.bump = ctx.bumps.registry;
-        msg!("SolGuard Registry initialized");
+        msg!("SolGuard Registry initialized by {}", registry.authority);
         Ok(())
     }
 
-    /// Record a new alert on-chain.
-    /// Only callable by the registry authority (SolGuard agent).
+    /// Record a new alert on-chain. Only callable by the registry authority.
     pub fn record_alert(
         ctx: Context<RecordAlert>,
         program_id: Pubkey,
@@ -35,8 +51,14 @@ pub mod solguard_registry {
         old_authority: Pubkey,
         new_authority: Pubkey,
     ) -> Result<()> {
-        let alert = &mut ctx.accounts.alert;
+        // ── Input validation ─────────────────────────────────────────
+        require!(risk_level <= MAX_RISK_LEVEL, SolGuardError::InvalidRiskLevel);
+        require!(event_type <= MAX_EVENT_TYPE, SolGuardError::InvalidEventType);
+
         let registry = &mut ctx.accounts.registry;
+        require!(!registry.paused, SolGuardError::RegistryPaused);
+
+        let alert = &mut ctx.accounts.alert;
         let clock = Clock::get()?;
 
         alert.registry = registry.key();
@@ -50,13 +72,18 @@ pub mod solguard_registry {
         alert.slot = clock.slot;
         alert.alert_index = registry.total_alerts;
 
-        registry.total_alerts += 1;
+        // ── Checked arithmetic ───────────────────────────────────────
+        registry.total_alerts = registry
+            .total_alerts
+            .checked_add(1)
+            .ok_or(SolGuardError::CounterOverflow)?;
 
         msg!(
-            "SolGuard Alert #{} recorded: program={}, risk={}",
+            "SolGuard Alert #{} recorded: program={}, risk={}, event={}",
             alert.alert_index,
             program_id,
-            risk_level
+            risk_level,
+            event_type
         );
 
         emit!(AlertRecorded {
@@ -69,6 +96,44 @@ pub mod solguard_registry {
             slot: clock.slot,
         });
 
+        Ok(())
+    }
+
+    /// Pause / unpause the registry. Pausing blocks new alert writes but
+    /// does not affect existing records — used during incident response.
+    pub fn set_paused(ctx: Context<AdminOp>, paused: bool) -> Result<()> {
+        ctx.accounts.registry.paused = paused;
+        msg!("Registry pause state -> {}", paused);
+        Ok(())
+    }
+
+    /// Propose a new authority. Two-step handoff: the incumbent proposes,
+    /// the proposed key must explicitly accept. Mitigates hijacked-key
+    /// scenarios where an attacker could transfer ownership instantly.
+    pub fn propose_authority(ctx: Context<AdminOp>, new_authority: Pubkey) -> Result<()> {
+        ctx.accounts.registry.pending_authority = new_authority;
+        msg!("Authority transfer proposed -> {}", new_authority);
+        Ok(())
+    }
+
+    /// Accept a pending authority transfer. Must be signed by the proposed key.
+    pub fn accept_authority(ctx: Context<AcceptAuthority>) -> Result<()> {
+        let registry = &mut ctx.accounts.registry;
+        require!(
+            registry.pending_authority == ctx.accounts.new_authority.key(),
+            SolGuardError::NotPendingAuthority
+        );
+        let old = registry.authority;
+        registry.authority = ctx.accounts.new_authority.key();
+        registry.pending_authority = Pubkey::default();
+        msg!("Authority transferred {} -> {}", old, registry.authority);
+        Ok(())
+    }
+
+    /// Close an alert account and reclaim rent. Useful for old low-risk
+    /// alerts that no longer need on-chain presence. Only the authority.
+    pub fn close_alert(_ctx: Context<CloseAlert>) -> Result<()> {
+        msg!("Alert account closed and rent reclaimed");
         Ok(())
     }
 }
@@ -109,16 +174,54 @@ pub struct RecordAlert<'info> {
         init,
         payer = authority,
         space = 8 + AlertRecord::INIT_SPACE,
-        seeds = [
-            b"alert",
-            registry.total_alerts.to_le_bytes().as_ref(),
-        ],
+        seeds = [b"alert", registry.total_alerts.to_le_bytes().as_ref()],
         bump,
     )]
     pub alert: Account<'info, AlertRecord>,
     #[account(mut)]
     pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct AdminOp<'info> {
+    #[account(
+        mut,
+        seeds = [b"registry"],
+        bump = registry.bump,
+        has_one = authority,
+    )]
+    pub registry: Account<'info, Registry>,
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct AcceptAuthority<'info> {
+    #[account(
+        mut,
+        seeds = [b"registry"],
+        bump = registry.bump,
+    )]
+    pub registry: Account<'info, Registry>,
+    pub new_authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct CloseAlert<'info> {
+    #[account(
+        seeds = [b"registry"],
+        bump = registry.bump,
+        has_one = authority,
+    )]
+    pub registry: Account<'info, Registry>,
+    #[account(
+        mut,
+        close = authority,
+        has_one = registry,
+    )]
+    pub alert: Account<'info, AlertRecord>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
 }
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -128,8 +231,12 @@ pub struct RecordAlert<'info> {
 pub struct Registry {
     /// The authority (SolGuard agent wallet) that can record alerts
     pub authority: Pubkey,
+    /// Two-step handoff target — must be explicitly accepted
+    pub pending_authority: Pubkey,
     /// Total number of alerts recorded
     pub total_alerts: u64,
+    /// Incident-response circuit breaker
+    pub paused: bool,
     /// PDA bump
     pub bump: u8,
 }
@@ -137,25 +244,15 @@ pub struct Registry {
 #[account]
 #[derive(InitSpace)]
 pub struct AlertRecord {
-    /// Parent registry
     pub registry: Pubkey,
-    /// The program that triggered the alert
     pub program_id: Pubkey,
-    /// Risk level: 0=LOW, 1=MEDIUM, 2=HIGH, 3=CRITICAL
     pub risk_level: u8,
-    /// Event type: 0=SET_AUTHORITY, 1=UPGRADE, 2=INITIALIZE_BUFFER
     pub event_type: u8,
-    /// SHA-256 hash of the full alert JSON (off-chain verification)
     pub alert_hash: [u8; 32],
-    /// Previous upgrade authority
     pub old_authority: Pubkey,
-    /// New upgrade authority
     pub new_authority: Pubkey,
-    /// Unix timestamp of the alert
     pub timestamp: i64,
-    /// Solana slot when recorded
     pub slot: u64,
-    /// Sequential alert index
     pub alert_index: u64,
 }
 
@@ -172,12 +269,18 @@ pub struct AlertRecorded {
     pub slot: u64,
 }
 
-// ── Error codes ──────────────────────────────────────────────────────────────
+// ── Errors ───────────────────────────────────────────────────────────────────
 
 #[error_code]
 pub enum SolGuardError {
     #[msg("Invalid risk level. Must be 0-3.")]
     InvalidRiskLevel,
-    #[msg("Invalid event type. Must be 0-2.")]
+    #[msg("Invalid event type. Must be 0-4.")]
     InvalidEventType,
+    #[msg("Registry is paused — alerts cannot be recorded right now.")]
+    RegistryPaused,
+    #[msg("Alert counter overflow — registry has recorded u64::MAX alerts.")]
+    CounterOverflow,
+    #[msg("Signer is not the pending authority — transfer cannot be accepted.")]
+    NotPendingAuthority,
 }

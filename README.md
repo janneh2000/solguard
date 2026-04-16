@@ -167,17 +167,21 @@ ngrok http 8000
 # Webhook path: https://your-ngrok-url/webhooks/helius
 ```
 
-## API Reference
+## API Reference (v2)
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Health check + agent status |
-| `/api/watchlist` | GET | Current watchlist with authority info |
-| `/api/alerts` | GET | Historical alerts (query: `?limit=50&risk_level=CRITICAL`) |
-| `/api/stats` | GET | Dashboard statistics |
-| `/api/stream` | GET | SSE real-time event stream |
-| `/api/trigger-test` | POST | Simulate an authority change for demo |
-| `/webhooks/helius` | POST | Helius webhook receiver |
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/health` | GET | — | Health check + agent + security flags |
+| `/api/watchlist` | GET | — | Current watchlist with authority info |
+| `/api/alerts` | GET | — | Historical alerts (`?limit=50&risk_level=CRITICAL`) |
+| `/api/stats` | GET | — | Dashboard statistics |
+| `/api/timeline` | GET | — | 24h bucketed alert counts per severity (for sparkline) |
+| `/api/stream` | GET | — | SSE real-time event stream (bounded by `MAX_SSE_CLIENTS`) |
+| `/api/replay/drift` | POST | — | Public: replays the 3-stage Drift hack for demos |
+| `/api/trigger-test` | POST | `X-Admin-Token` | Gated simulation endpoint |
+| `/webhooks/helius` | POST | HMAC or Bearer | Webhook receiver (signature validated) |
+
+Rate limits: every `/api/*` and `/webhooks/*` route is rate-limited per-IP. CORS is allow-listed via `SOLGUARD_CORS_ORIGINS`. See [`docs/AUDIT_REPORT.md`](docs/AUDIT_REPORT.md) for the full security posture.
 
 ## Architecture
 
@@ -210,18 +214,22 @@ solguard/
 └── .env.example
 ```
 
-## Key Features
+## Key Features (v2)
 
 - **15 DeFi protocols** monitored on Solana mainnet
 - **Dual detection**: Helius webhooks (real-time push) + RPC polling (every 30s)
-- **Claude AI risk scoring** trained on real exploit patterns (Drift $285M hack, Serum/FTX)
-- **Durable nonce monitoring** — detects the Drift attack pattern (pre-signed transaction staging)
+- **Claude AI risk scoring** trained on real exploit patterns (Drift $285M hack, Serum/FTX, Jito-bundled upgrades)
+- **Durable nonce monitoring** — detects the Drift attack pattern (pre-signed transaction staging), now concurrency-bounded & LRU-deduped
 - **Squads multisig detection** — automatically identifies security upgrades vs threats
-- **Attack pattern matching** — Claude classifies events against known DPRK, FTX-era, and generic hijack patterns
-- **On-chain alert registry** (Anchor program) — immutable, verifiable detection history on Solana devnet
-- **Live dashboard** with SSE streaming, expandable alerts, demo mode
+- **Attack pattern matching** — Claude classifies events against DPRK, FTX-era, Jito-bundle, multisig-threshold-reduction, and generic hijack patterns
+- **On-chain alert registry** (Anchor program, v0.2) — validated inputs, checked arithmetic, two-step authority handoff, pause circuit breaker
+- **Cinematic Drift replay** — the dashboard's `R` key plays the three-stage hack with presenter captions, perfect for silent screen recordings
+- **Presenter mode** — teleprompter-style overlay so demo videos narrate themselves
+- **Security Score gauge + 24h severity sparkline** — ecosystem-level visual
+- **Sound design** — Web Audio API beeps synthesized for each severity, zero external assets
+- **Keyboard shortcuts**: `D` Demo · `R` Replay · `P` Presenter · `S` Sound
 - **Multi-channel alerts**: Discord webhooks, Telegram Bot API
-- **SQLite persistence** with WAL mode for fast writes
+- **Hardened security posture**: CORS allow-list, HMAC webhook auth, admin-only trigger, rate-limited endpoints, CSP + HSTS on the live site, LLM output validated, SSE clients bounded. See [`docs/AUDIT_REPORT.md`](docs/AUDIT_REPORT.md).
 
 ## Tech Stack
 
@@ -238,13 +246,25 @@ solguard/
 
 ## Demo
 
-### Trigger a Test Alert
+### Replay the Drift hack (public, safe, no auth)
 
 ```bash
-curl -X POST http://localhost:8000/api/trigger-test
+curl -X POST https://your-api-url/api/replay/drift
 ```
 
-This simulates a suspicious authority change on Jupiter v6, triggering the full pipeline: event detection → Claude AI analysis → dashboard update → Discord/Telegram notification.
+The backend emits the three-stage Drift attack sequence over ~8 seconds. The dashboard renders each stage as a live alert, with presenter captions narrating what's happening — built for screen recordings without a microphone.
+
+### Trigger a synthetic alert (admin only)
+
+```bash
+curl -X POST https://your-api-url/api/trigger-test -H "X-Admin-Token: $SOLGUARD_ADMIN_TOKEN"
+```
+
+Requires `SOLGUARD_ADMIN_TOKEN` to be set. If the token is empty the endpoint returns `503`.
+
+### Full demo run-book
+
+See [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) for a timed, caption-ready 2:30 video script.
 
 ## Roadmap
 
