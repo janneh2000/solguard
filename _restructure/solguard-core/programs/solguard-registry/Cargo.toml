@@ -1,0 +1,19 @@
+[package]
+name = "solguard-registry"
+version = "0.2.0"
+description = "SolGuard on-chain alert registry — immutable record of detected upgrade authority changes"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "solguard_registry"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.30.1"

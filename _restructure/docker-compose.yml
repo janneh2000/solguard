@@ -1,0 +1,60 @@
+---
+# Local-dev stack: run the whole SolGuard system from one command.
+#   $ cd _restructure && docker compose up --build
+#
+# Services
+#   core       → http://localhost:8000 (FastAPI agent + SSE + REST API)
+#   notifiers  → http://localhost:8001 (HMAC-signed alert receiver)
+#   dashboard  → http://localhost:8080 (static HTML served by nginx)
+#
+# This file mirrors the production topology. In prod the three services live
+# in separate repos with their own Dockerfiles; compose just orchestrates them
+# together for development.
+
+services:
+  core:
+    build:
+      context: ./solguard-core
+      dockerfile: Dockerfile
+    container_name: solguard-core
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./solguard-core/.env
+    environment:
+      # Point core at the notifier service running on the same compose network.
+      NOTIFIER_URLS: "http://notifiers:8001/alert"
+      NOTIFIER_HMAC_SECRET: "${NOTIFIER_HMAC_SECRET:-dev-shared-secret-change-me}"
+      SOLGUARD_CORS_ORIGINS: "http://localhost:8080,http://localhost:3000"
+    restart: unless-stopped
+    depends_on:
+      - notifiers
+    volumes:
+      - core-data:/data
+
+  notifiers:
+    build:
+      context: ./solguard-notifiers
+      dockerfile: Dockerfile
+    container_name: solguard-notifiers
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./solguard-notifiers/.env
+    environment:
+      NOTIFIER_HMAC_SECRET: "${NOTIFIER_HMAC_SECRET:-dev-shared-secret-change-me}"
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: ./solguard-dashboard
+      dockerfile: Dockerfile
+    container_name: solguard-dashboard
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    depends_on:
+      - core
+
+volumes:
+  core-data:

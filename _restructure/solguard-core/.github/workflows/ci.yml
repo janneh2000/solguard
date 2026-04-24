@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python:
+    name: Python tests + lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt pytest ruff
+
+      - name: Lint (ruff)
+        run: ruff check agent/ || true  # non-blocking on first pass
+
+      - name: Syntax check all modules
+        run: |
+          python -m py_compile \
+            agent/main.py \
+            agent/claude_engine.py \
+            agent/database.py \
+            agent/notifiers.py \
+            agent/watchers/nonce_monitor.py \
+            agent/watchers/upgrade_authority.py \
+            agent/onchain_writer.py \
+            agent/metrics.py
+
+      - name: Run tests
+        run: pytest agent/tests/ -v
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t solguard-core:ci .
+
+  anchor:
+    name: Anchor build
+    runs-on: ubuntu-latest
+    continue-on-error: true  # Anchor toolchain install is fiddly; don't block core CI on it
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source "$HOME/.cargo/env"
+          rustc --version
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.18.22/install)"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana --version
+      - name: Install Anchor
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor --tag v0.30.1 anchor-cli --locked
+      - name: Build program
+        run: |
+          cd programs/solguard-registry
+          anchor build

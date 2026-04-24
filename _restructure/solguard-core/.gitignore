@@ -1,0 +1,35 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtualenvs
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# SQLite runtime files (NEVER commit these)
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Pytest / type-checker caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Anchor / Rust build artifacts
+target/
+.anchor/
+
+# Editor noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
