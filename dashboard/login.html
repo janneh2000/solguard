@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none';">
+<title>SolGuard - Login</title>
+<meta name="description" content="Request early access to SolGuard.">
+<meta name="theme-color" content="#ffffff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%234d46f6' d='M32 4 52 12v15c0 14-8.5 25.4-20 33C20.5 52.4 12 41 12 27V12L32 4Z'/%3E%3Cpath fill='white' d='M32 12 44 17v10c0 8.4-4.7 15.8-12 21-7.3-5.2-12-12.6-12-21V17l12-5Zm0 7-6 2.5V27c0 5.3 2.2 9.8 6 13.4 3.8-3.6 6-8.1 6-13.4v-5.5L32 19Z'/%3E%3C/svg%3E">
+<style>
+:root {
+  --ink: #071233;
+  --muted: #59637f;
+  --soft: #8f96ad;
+  --line: #dde2f4;
+  --blue: #4f46f5;
+  --blue-strong: #4338e9;
+  --mint: #27d6c4;
+  --page: #fbfcff;
+  --white: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--page);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, #ffffff 0%, var(--page) 100%);
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.nav {
+  width: min(100%, 1510px);
+  margin: 0 auto;
+  padding: 24px clamp(20px, 4vw, 52px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  animation: slide-down 420ms ease both;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  font-size: clamp(1.12rem, 1.7vw, 1.45rem);
+  font-weight: 800;
+  color: #111936;
+  white-space: nowrap;
+}
+
+.nav-link {
+  color: #303a5c;
+  font-weight: 700;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.nav-link:hover {
+  color: var(--blue);
+  transform: translateX(-2px);
+}
+
+.login-shell {
+  width: min(100%, 1510px);
+  margin: 0 auto;
+  padding: clamp(28px, 6vw, 86px) clamp(20px, 4vw, 52px) 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-panel {
+  width: min(100%, 460px);
+  padding: 30px;
+  border: 1px solid rgba(221, 226, 244, 0.9);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 30px 80px rgba(50, 56, 130, 0.18);
+  animation: panel-in 560ms cubic-bezier(0.2, 0.85, 0.2, 1) both;
+}
+
+.panel-top {
+  margin-bottom: 24px;
+}
+
+.panel-kicker {
+  margin: 0 0 10px;
+  color: var(--blue);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.login-panel h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(1.9rem, 5vw, 2.55rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.panel-copy {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.login-form {
+  display: grid;
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field label {
+  color: #26304f;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.field input {
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfcff;
+  color: var(--ink);
+  padding: 0 16px;
+  outline: 0;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.field input:focus {
+  border-color: rgba(79, 70, 245, 0.58);
+  background: var(--white);
+  box-shadow: 0 0 0 4px rgba(79, 70, 245, 0.1);
+}
+
+.form-note {
+  margin: 0;
+  color: var(--soft);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.button {
+  min-height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--blue);
+  color: var(--white);
+  box-shadow: 0 18px 32px rgba(79, 70, 245, 0.16);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  background: var(--blue-strong);
+  box-shadow: 0 22px 38px rgba(79, 70, 245, 0.22);
+}
+
+.button:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.login-submit {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.login-submit .submit-ready,
+.login-submit .submit-loading,
+.login-submit .submit-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.login-submit .submit-loading,
+.login-submit .submit-done,
+.login-form.is-submitting .submit-ready,
+.login-form.is-blocked .submit-ready {
+  display: none;
+}
+
+.login-form.is-submitting .submit-loading,
+.login-form.is-blocked .submit-done {
+  display: inline-flex;
+}
+
+.spinner {
+  width: 17px;
+  height: 17px;
+  border: 2px solid rgba(255, 255, 255, 0.42);
+  border-top-color: var(--white);
+  border-radius: 50%;
+  animation: spin 760ms linear infinite;
+}
+
+.status-message {
+  margin: 0;
+  padding: 0 2px;
+  color: #24304f;
+  font-size: 0.94rem;
+  line-height: 1.45;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.login-form.is-blocked .status-message {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes slide-up {
+  from { transform: translateY(18px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slide-down {
+  from { transform: translateY(-12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes panel-in {
+  from { transform: translateY(18px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 620px) {
+  .nav {
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
+
+  .login-shell {
+    padding-top: 34px;
+  }
+
+  .login-panel {
+    padding: 24px;
+    border-radius: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}
+</style>
+</head>
+<body>
+<div class="login-page">
+  <header class="nav" aria-label="Login navigation">
+    <a class="brand" href="./index.html" aria-label="SolGuard home">
+      <span>SolGuard</span>
+    </a>
+
+    <a class="nav-link" href="./index.html">Back home</a>
+  </header>
+
+  <main class="login-shell">
+    <section class="login-panel" aria-describedby="login-copy">
+      <div class="panel-top">
+        <p class="panel-kicker">Welcome back</p>
+        <h2>Log in</h2>
+        <p class="panel-copy" id="login-copy">Access is limited while SolGuard is in private review.</p>
+      </div>
+
+      <form class="login-form" id="login-form">
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input id="login-email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required>
+        </div>
+
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+        </div>
+
+        <p class="form-note">Accounts are not active yet. This form is ready for the real login flow when access opens.</p>
+
+        <button class="button login-submit" type="submit">
+          <span class="submit-ready">Log in</span>
+          <span class="submit-loading"><span class="spinner" aria-hidden="true"></span>Signing in</span>
+          <span class="submit-done">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <path d="m5 12.4 4.2 4.2L19.5 6.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Access pending
+          </span>
+        </button>
+
+        <p class="status-message" role="status" aria-live="polite">You're not accepted into the waitlist yet. We'll be in touch soon.</p>
+      </form>
+    </section>
+  </main>
+</div>
+<script src="./login.js" defer></script>
+</body>
+</html>
