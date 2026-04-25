@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none';">
+<title>SolGuard — Team</title>
+<meta name="description" content="The small crew behind SolGuard. Founder Rivaldo Janneh and open-source contributor Gui Bibeau.">
+<meta name="theme-color" content="#ffffff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%234d46f6' d='M32 4 52 12v15c0 14-8.5 25.4-20 33C20.5 52.4 12 41 12 27V12L32 4Z'/%3E%3Cpath fill='white' d='M32 12 44 17v10c0 8.4-4.7 15.8-12 21-7.3-5.2-12-12.6-12-21V17l12-5Zm0 7-6 2.5V27c0 5.3 2.2 9.8 6 13.4 3.8-3.6 6-8.1 6-13.4v-5.5L32 19Z'/%3E%3C/svg%3E">
+<style>
+:root {
+  --ink: #071233;
+  --muted: #59637f;
+  --soft: #8f96ad;
+  --line: #dde2f4;
+  --blue: #4f46f5;
+  --blue-strong: #4338e9;
+  --blue-soft: #eef0ff;
+  --mint: #27d6c4;
+  --page: #fbfcff;
+  --white: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+html { min-width: 320px; background: var(--page); }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, #ffffff 0%, var(--page) 100%);
+  overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.page { min-height: 100vh; overflow: hidden; }
+
+/* ── Nav ────────────────────────────────────────────────────────────────── */
+.nav {
+  width: min(100%, 1510px);
+  margin: 0 auto;
+  padding: 24px clamp(20px, 4vw, 52px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  animation: slide-down 420ms ease both;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  font-size: clamp(1.12rem, 1.7vw, 1.45rem);
+  font-weight: 800;
+  color: #111936;
+  white-space: nowrap;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  color: #303a5c;
+  font-weight: 600;
+}
+
+.button {
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--blue);
+  color: var(--white);
+  box-shadow: 0 18px 32px rgba(79, 70, 245, 0.16);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  background: var(--blue-strong);
+  box-shadow: 0 22px 38px rgba(79, 70, 245, 0.22);
+}
+
+.button.nav-cta { min-width: 138px; padding: 0 24px; }
+
+/* ── Hero ───────────────────────────────────────────────────────────────── */
+.team-hero {
+  width: min(100%, 1510px);
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 64px) clamp(20px, 4vw, 52px) clamp(20px, 3vw, 36px);
+  animation: slide-up 520ms ease both;
+}
+
+.team-hero p.kicker {
+  margin: 0 0 14px;
+  font-size: 0.86rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--blue);
+  font-weight: 800;
+}
+
+.team-hero h1 {
+  margin: 0;
+  max-width: 880px;
+  font-size: clamp(2.4rem, 4.6vw, 4.2rem);
+  line-height: 0.98;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.team-hero h1 span { color: var(--blue); display: inline-block; }
+
+.team-hero .lead {
+  width: 100%;
+  max-width: 720px;
+  margin: 22px 0 0;
+  color: #52607d;
+  font-size: clamp(1.05rem, 1.4vw, 1.28rem);
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+/* ── Team grid ──────────────────────────────────────────────────────────── */
+.team-grid {
+  width: min(100%, 1510px);
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 32px) clamp(20px, 4vw, 52px) clamp(40px, 6vw, 80px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(20px, 3vw, 36px);
+}
+
+.member {
+  position: relative;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: clamp(28px, 3vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.member:hover {
+  transform: translateY(-3px);
+  border-color: #c4cbe6;
+  box-shadow: 0 24px 50px rgba(7, 18, 51, 0.08);
+}
+
+.member-top {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue) 0%, var(--mint) 100%);
+  color: var(--white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1.6rem;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+  box-shadow: 0 12px 28px rgba(79, 70, 245, 0.22);
+}
+
+.avatar.alt {
+  background: linear-gradient(135deg, var(--mint) 0%, var(--blue-strong) 100%);
+  box-shadow: 0 12px 28px rgba(39, 214, 196, 0.25);
+}
+
+.member-id h2 {
+  margin: 0;
+  font-size: clamp(1.3rem, 1.8vw, 1.6rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.member-id .role {
+  margin: 4px 0 0;
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+}
+
+.member-bio {
+  margin: 0;
+  color: #4a5571;
+  font-size: 1rem;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--blue-soft);
+  color: var(--blue);
+  border-radius: 100px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.member-links {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.member-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.member-links a:hover {
+  color: var(--blue);
+  border-color: var(--blue);
+  transform: translateY(-1px);
+}
+
+.member-links svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* ── Acknowledgements ───────────────────────────────────────────────────── */
+.acks {
+  width: min(100%, 1510px);
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 56px) clamp(20px, 4vw, 52px) clamp(40px, 6vw, 80px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: clamp(24px, 4vw, 56px);
+  align-items: start;
+}
+
+.acks h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 2.4vw, 2.2rem);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.acks p {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.65;
+  font-weight: 500;
+}
+
+.acks p:last-child { margin-bottom: 0; }
+
+.acks p strong { color: var(--ink); font-weight: 700; }
+
+.acks a {
+  color: var(--blue);
+  font-weight: 700;
+  border-bottom: 1px solid transparent;
+  transition: border-color 160ms ease;
+}
+
+.acks a:hover { border-bottom-color: var(--blue); }
+
+.contribute {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: clamp(24px, 3vw, 36px);
+}
+
+.contribute h3 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.005em;
+}
+
+/* ── Footer (mirrors index.html) ────────────────────────────────────────── */
+.site-footer {
+  margin-top: clamp(20px, 4vw, 64px);
+  padding: clamp(48px, 6vw, 72px) clamp(20px, 4vw, 52px) 28px;
+  background: linear-gradient(180deg, var(--white) 0%, var(--blue-soft) 100%);
+  border-top: 1px solid var(--line);
+}
+
+.footer-inner {
+  width: min(100%, 1510px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(220px, 1.2fr) 2fr;
+  gap: clamp(32px, 5vw, 80px);
+  align-items: start;
+}
+
+.footer-brand .brand { font-size: 1.45rem; margin-bottom: 14px; display: inline-flex; }
+
+.footer-tagline {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.96rem;
+  line-height: 1.55;
+  font-weight: 600;
+  max-width: 280px;
+}
+
+.footer-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(24px, 4vw, 48px);
+}
+
+.footer-col h3 {
+  margin: 0 0 14px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--soft);
+  font-weight: 800;
+}
+
+.footer-col a {
+  display: block;
+  padding: 6px 0;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+.footer-col a:hover { color: var(--blue); transform: translateX(2px); }
+.footer-col a[href^="mailto:"] { word-break: break-word; }
+
+.footer-bottom {
+  width: min(100%, 1510px);
+  margin: clamp(28px, 4vw, 44px) auto 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-copy { margin: 0; color: var(--soft); font-size: 0.86rem; font-weight: 600; }
+.footer-copy a { color: var(--blue); font-weight: 700; }
+.footer-copy a:hover { color: var(--blue-strong); text-decoration: underline; }
+
+.footer-socials { display: inline-flex; gap: 14px; align-items: center; }
+
+.footer-socials a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: var(--white);
+  transition: color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.footer-socials a:hover { color: var(--blue); border-color: var(--blue); transform: translateY(-2px); }
+
+@media (max-width: 920px) {
+  .team-grid { grid-template-columns: 1fr; }
+  .acks { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 880px) {
+  .footer-inner { grid-template-columns: 1fr; gap: 36px; }
+  .footer-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+}
+
+@media (max-width: 620px) {
+  .nav-actions a:first-child { display: none; }
+}
+
+@media (max-width: 560px) {
+  .footer-cols { grid-template-columns: 1fr 1fr; }
+  .footer-bottom { justify-content: center; text-align: center; }
+  .member-top { flex-direction: column; align-items: flex-start; gap: 14px; }
+}
+
+@keyframes slide-up { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes slide-down { from { transform: translateY(-12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="nav" aria-label="Main navigation">
+    <a class="brand" href="./index.html" aria-label="SolGuard home"><span>SolGuard</span></a>
+    <div class="nav-actions">
+      <a href="./app.html">Live Demo</a>
+      <a href="./login.html">Log in</a>
+      <a class="button nav-cta" href="./index.html#waitlist">Get Started</a>
+    </div>
+  </header>
+
+  <section class="team-hero" aria-labelledby="team-title">
+    <p class="kicker">The team</p>
+    <h1 id="team-title">A small crew, <span>shipping fast</span>.</h1>
+    <p class="lead">SolGuard is built by a founder who lives close to Solana operators and an experienced open-source contributor who shaped the public surface. Lean by design, accountable to one mission: stop the next upgrade-authority hijack before users feel it.</p>
+  </section>
+
+  <section class="team-grid" aria-label="Team members">
+    <article class="member">
+      <div class="member-top">
+        <div class="avatar" aria-hidden="true">RJ</div>
+        <div class="member-id">
+          <h2>Rivaldo Janneh</h2>
+          <p class="role">Founder &middot; Builder</p>
+        </div>
+      </div>
+      <p class="member-bio">Founder of SolGuard. Designs the threat model, owns the agent runtime, and ships from end-to-end &mdash; on-chain Anchor registry, FastAPI sentinel, real-time dashboard, and HMAC-signed alert pipeline. Submitted to the Colosseum Frontier Hackathon, building toward a production sentinel for Solana programs.</p>
+      <div class="tags">
+        <span class="tag">Solana</span>
+        <span class="tag">Anchor</span>
+        <span class="tag">Python</span>
+        <span class="tag">Agent design</span>
+        <span class="tag">Security</span>
+      </div>
+      <div class="member-links">
+        <a href="https://github.com/janneh2000" target="_blank" rel="noopener" aria-label="Rivaldo on GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-1.96c-3.2.7-3.87-1.54-3.87-1.54-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.24 3.33.95.1-.74.4-1.24.72-1.53-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.7 5.4-5.27 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
+          GitHub
+        </a>
+        <a href="mailto:solguard2026@gmail.com" aria-label="Email Rivaldo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          Email
+        </a>
+      </div>
+    </article>
+
+    <article class="member">
+      <div class="member-top">
+        <div class="avatar alt" aria-hidden="true">GB</div>
+        <div class="member-id">
+          <h2>Gui Bibeau</h2>
+          <p class="role">Open-source contributor &middot; Solana core developer</p>
+        </div>
+      </div>
+      <p class="member-bio">Contributed the public-facing design system &mdash; the marketing landing, login surface, modal flow, and the brand palette SolGuard now ships with. Long-time Solana core developer with deep front-end and ecosystem experience. Helped tighten the first impression so the work behind the scenes lands the way it deserves.</p>
+      <div class="tags">
+        <span class="tag">Solana</span>
+        <span class="tag">Front-end</span>
+        <span class="tag">Design systems</span>
+        <span class="tag">Open source</span>
+      </div>
+      <div class="member-links">
+        <a href="https://github.com/GuiBibeau" target="_blank" rel="noopener" aria-label="Gui on GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-1.96c-3.2.7-3.87-1.54-3.87-1.54-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.24 3.33.95.1-.74.4-1.24.72-1.53-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.7 5.4-5.27 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
+          @GuiBibeau
+        </a>
+      </div>
+    </article>
+  </section>
+
+  <section class="acks" aria-labelledby="acks-title">
+    <div>
+      <h2 id="acks-title">Acknowledgements</h2>
+    </div>
+    <div>
+      <p>SolGuard stands on a small list of dependencies and a long list of work that came before it. Special thanks to <strong>Gui Bibeau</strong> for the open-source contribution that brought the public surface to life, and to the broader Solana developer community whose patterns and tooling make a project like this possible.</p>
+      <p>The agent stack runs on <a href="https://www.anthropic.com/" target="_blank" rel="noopener">Claude</a> for risk analysis, <a href="https://www.anchor-lang.com/" target="_blank" rel="noopener">Anchor</a> for the on-chain registry, and <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener">FastAPI</a> for the sentinel runtime. Built for the <a href="https://www.colosseum.org/" target="_blank" rel="noopener">Colosseum Frontier Hackathon</a>.</p>
+      <div class="contribute" role="region" aria-label="Contribute to SolGuard">
+        <h3>Want to contribute?</h3>
+        <p>The core agent will be open-sourced after Phase 3. If you ship Solana infra, audit programs, or operate a treasury and want to be part of an early sentinel program, reach out at <a href="mailto:solguard2026@gmail.com">solguard2026@gmail.com</a> or <a href="https://www.linkedin.com/company/solguard-sol/" target="_blank" rel="noopener">message us on LinkedIn</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer" aria-label="Site footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="./index.html" aria-label="SolGuard home"><span>SolGuard</span></a>
+        <p class="footer-tagline">Always guarding Solana protocols. Real-time AI sentinel for upgrade authority hijacks.</p>
+      </div>
+
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h3>Product</h3>
+          <a href="./app.html">Live Demo</a>
+          <a href="./index.html#how-it-works">How It Works</a>
+          <a href="./login.html">Log In</a>
+          <a href="https://github.com/janneh2000/solguard" target="_blank" rel="noopener">GitHub</a>
+        </div>
+
+        <div class="footer-col">
+          <h3>Company</h3>
+          <a href="./team.html">Team</a>
+          <a href="https://www.linkedin.com/company/solguard-sol/" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="https://x.com/GuardSol12181" target="_blank" rel="noopener">X / Twitter</a>
+        </div>
+
+        <div class="footer-col">
+          <h3>Contact</h3>
+          <a href="mailto:solguard2026@gmail.com">solguard2026@gmail.com</a>
+          <a href="https://www.linkedin.com/company/solguard-sol/" target="_blank" rel="noopener">DM on LinkedIn</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p class="footer-copy">&copy; 2026 SolGuard &middot; Built with <a href="https://github.com/GuiBibeau" target="_blank" rel="noopener">@GuiBibeau</a> and <a href="./team.html">contributors</a></p>
+      <div class="footer-socials" aria-label="SolGuard on social platforms">
+        <a href="https://www.linkedin.com/company/solguard-sol/" target="_blank" rel="noopener" aria-label="SolGuard on LinkedIn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.05-1.86-3.05-1.86 0-2.15 1.45-2.15 2.95v5.67H9.33V9h3.41v1.56h.05c.48-.9 1.64-1.86 3.38-1.86 3.61 0 4.28 2.38 4.28 5.47v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45z"/>
+          </svg>
+        </a>
+        <a href="https://x.com/GuardSol12181" target="_blank" rel="noopener" aria-label="SolGuard on X">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </a>
+        <a href="mailto:solguard2026@gmail.com" aria-label="Email SolGuard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+            <path d="m3 7 9 6 9-6"/>
+          </svg>
+        </a>
+        <a href="https://github.com/janneh2000/solguard" target="_blank" rel="noopener" aria-label="SolGuard on GitHub">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56 0-.27-.01-1-.02-1.96-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.27-1.69-1.27-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.76 2.69 1.25 3.35.96.1-.74.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11.06 11.06 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.13 0 1.54-.01 2.78-.01 3.16 0 .31.21.67.8.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+</div>
+</body>
+</html>
