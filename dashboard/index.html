@@ -11,18 +11,66 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%234d46f6' d='M32 4 52 12v15c0 14-8.5 25.4-20 33C20.5 52.4 12 41 12 27V12L32 4Z'/%3E%3Cpath fill='white' d='M32 12 44 17v10c0 8.4-4.7 15.8-12 21-7.3-5.2-12-12.6-12-21V17l12-5Zm0 7-6 2.5V27c0 5.3 2.2 9.8 6 13.4 3.8-3.6 6-8.1 6-13.4v-5.5L32 19Z'/%3E%3C/svg%3E">
+<script src="./theme.js"></script>
 <style>
 :root {
+  color-scheme: light;
   --ink: #071233;
   --muted: #59637f;
   --soft: #8f96ad;
   --line: #dde2f4;
+  --line-strong: #c9d0f5;
   --blue: #4f46f5;
   --blue-strong: #4338e9;
   --blue-soft: #eef0ff;
+  --blue-soft-2: #f3f5ff;
+  --blue-tint: #f8f9ff;
   --mint: #27d6c4;
   --page: #fbfcff;
+  --page-top: #ffffff;
   --white: #ffffff;
+  --shadow-cta: rgba(79, 70, 245, 0.16);
+  --shadow-cta-hover: rgba(79, 70, 245, 0.22);
+  --shadow-card: rgba(50, 56, 130, 0.22);
+  --shadow-mint: rgba(39, 214, 196, 0.25);
+  --overlay-soft: rgba(255, 255, 255, 0.44);
+  --overlay-strong: rgba(255, 255, 255, 0.94);
+  --overlay-ink: rgba(7, 18, 51, 0.22);
+  --accent-bubble: #b9c1ff;
+  --shadow-panel: rgba(50, 56, 130, 0.18);
+  --shadow-blue: rgba(79, 70, 245, 0.22);
+  --ring: rgba(79, 70, 245, 0.58);
+  --ring-glow: rgba(79, 70, 245, 0.1);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #eef1ff;
+  --muted: #a3acc6;
+  --soft: #6d7592;
+  --line: #232844;
+  --line-strong: #2f3760;
+  --blue: #7c75ff;
+  --blue-strong: #948dff;
+  --blue-soft: #1a1f3d;
+  --blue-soft-2: #161a33;
+  --blue-tint: #11142a;
+  --mint: #27d6c4;
+  --page: #0b0e1a;
+  --page-top: #0e1326;
+  --white: #131829;
+  --shadow-cta: rgba(124, 117, 255, 0.32);
+  --shadow-cta-hover: rgba(124, 117, 255, 0.42);
+  --shadow-card: rgba(0, 0, 0, 0.6);
+  --shadow-mint: rgba(39, 214, 196, 0.35);
+  --overlay-soft: rgba(19, 24, 41, 0.55);
+  --overlay-strong: rgba(19, 24, 41, 0.94);
+  --overlay-ink: rgba(255, 255, 255, 0.08);
+  --accent-bubble: #2f3760;
+  --shadow-panel: rgba(0, 0, 0, 0.55);
+  --shadow-blue: rgba(124, 117, 255, 0.32);
+  --ring: rgba(124, 117, 255, 0.7);
+  --ring-glow: rgba(124, 117, 255, 0.18);
 }
 
 * {
@@ -39,7 +87,8 @@ body {
   min-height: 100vh;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--ink);
-  background: linear-gradient(180deg, #ffffff 0%, var(--page) 100%);
+  background: linear-gradient(180deg, var(--page-top) 0%, var(--page) 100%);
+  transition: background-color 200ms ease, color 200ms ease;
   overflow-x: hidden;
 }
 
@@ -82,7 +131,7 @@ body.modal-open {
   align-items: center;
   font-size: clamp(1.12rem, 1.7vw, 1.45rem);
   font-weight: 800;
-  color: #111936;
+  color: var(--ink);
   white-space: nowrap;
 }
 
@@ -90,9 +139,48 @@ body.modal-open {
   display: flex;
   align-items: center;
   gap: 22px;
-  color: #303a5c;
+  color: var(--muted);
   font-weight: 600;
 }
+
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--white);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  transition: color 180ms ease, border-color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.theme-toggle:hover {
+  color: var(--blue);
+  border-color: var(--blue);
+  transform: translateY(-1px);
+}
+
+.theme-toggle:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 4px var(--ring-glow);
+  border-color: var(--ring);
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.theme-toggle .icon-sun { display: none; }
+.theme-toggle .icon-moon { display: block; }
+
+:root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+:root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 
 .button {
   min-height: 52px;
@@ -104,7 +192,7 @@ body.modal-open {
   border-radius: 9px;
   background: var(--blue);
   color: var(--white);
-  box-shadow: 0 18px 32px rgba(79, 70, 245, 0.16);
+  box-shadow: 0 18px 32px var(--shadow-cta);
   cursor: pointer;
   font: inherit;
   font-weight: 800;
@@ -114,7 +202,7 @@ body.modal-open {
 .button:hover {
   transform: translateY(-2px);
   background: var(--blue-strong);
-  box-shadow: 0 22px 38px rgba(79, 70, 245, 0.22);
+  box-shadow: 0 22px 38px var(--shadow-cta-hover);
 }
 
 .button:active {
@@ -167,7 +255,7 @@ h1 span {
   width: 100%;
   max-width: 610px;
   margin: 18px 0 0;
-  color: #52607d;
+  color: var(--muted);
   font-size: clamp(1.08rem, 1.7vw, 1.46rem);
   line-height: 1.48;
   font-weight: 500;
@@ -205,7 +293,7 @@ h1 span {
   width: min(100%, 1510px);
   margin: clamp(-72px, -5vw, -36px) auto 0;
   padding: 0 clamp(20px, 4vw, 52px) 42px;
-  color: #707895;
+  color: var(--soft);
 }
 
 .protocols p {
@@ -232,15 +320,15 @@ h1 span {
   padding: 16px 18px;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  color: #7f879e;
+  color: var(--soft);
   font-size: 0.98rem;
   font-weight: 900;
   transition: background 180ms ease, color 180ms ease;
 }
 
 .protocol-logo:hover {
-  background: #f8f9ff;
-  color: #596176;
+  background: var(--blue-tint);
+  color: var(--muted);
 }
 
 .protocol-logo img {
@@ -306,7 +394,7 @@ h1 span {
   padding: 30px 28px;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.44);
+  background: var(--overlay-soft);
   opacity: 0;
   transform: translateY(18px);
   transition: opacity 520ms ease, transform 520ms cubic-bezier(0.2, 0.85, 0.2, 1), background 180ms ease;
@@ -358,7 +446,7 @@ h1 span {
 
 .how-step p {
   margin: 16px 0 0;
-  color: #626b86;
+  color: var(--muted);
   font-size: 0.98rem;
   line-height: 1.5;
   font-weight: 600;
@@ -411,7 +499,7 @@ h1 span {
   position: absolute;
   width: min(58%, 420px);
   aspect-ratio: 1;
-  border: 2px solid #dfe4ff;
+  border: 2px solid var(--line);
   border-radius: 50%;
   transform: translate(4%, 2%);
 }
@@ -422,7 +510,7 @@ h1 span {
   width: min(46%, 340px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: #f3f5ff;
+  background: var(--blue-soft-2);
   opacity: 0.74;
   transform: translate(6%, 12%);
   z-index: 0;
@@ -446,7 +534,7 @@ h1 span {
   color: var(--white);
   display: grid;
   place-items: center;
-  box-shadow: 0 14px 26px rgba(39, 214, 196, 0.25);
+  box-shadow: 0 14px 26px var(--shadow-mint);
   animation: pulse-check 2.8s ease-in-out infinite;
 }
 
@@ -460,7 +548,7 @@ h1 span {
   bottom: 20%;
   width: 13px;
   height: 13px;
-  background: #b9c1ff;
+  background: var(--accent-bubble);
   box-shadow: none;
   animation-delay: 400ms;
 }
@@ -484,7 +572,7 @@ h1 span {
 .modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(7, 18, 51, 0.22);
+  background: var(--overlay-ink);
   backdrop-filter: blur(12px);
   opacity: 0;
   transition: opacity 220ms ease;
@@ -499,10 +587,10 @@ h1 span {
   z-index: 1;
   width: min(100%, 460px);
   padding: 30px;
-  border: 1px solid rgba(221, 226, 244, 0.9);
+  border: 1px solid var(--line);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 30px 80px rgba(50, 56, 130, 0.22);
+  background: var(--overlay-strong);
+  box-shadow: 0 30px 80px var(--shadow-card);
   opacity: 0;
   transform: translateY(18px) scale(0.97);
   transition: opacity 220ms ease, transform 260ms cubic-bezier(0.2, 0.85, 0.2, 1);
@@ -552,14 +640,14 @@ h1 span {
   flex: 0 0 auto;
   border: 1px solid var(--line);
   border-radius: 50%;
-  background: #f7f8ff;
+  background: var(--blue-tint);
   cursor: pointer;
   transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
 }
 
 .icon-button:hover {
   transform: rotate(8deg) scale(1.04);
-  border-color: #c9d0f5;
+  border-color: var(--line-strong);
   background: var(--white);
 }
 
@@ -574,7 +662,7 @@ h1 span {
 }
 
 .field label {
-  color: #26304f;
+  color: var(--ink);
   font-size: 0.9rem;
   font-weight: 900;
 }
@@ -584,7 +672,7 @@ h1 span {
   min-height: 54px;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: #fbfcff;
+  background: var(--page);
   color: var(--ink);
   padding: 0 16px;
   outline: 0;
@@ -592,9 +680,9 @@ h1 span {
 }
 
 .field input:focus {
-  border-color: rgba(79, 70, 245, 0.58);
+  border-color: var(--ring);
   background: var(--white);
-  box-shadow: 0 0 0 4px rgba(79, 70, 245, 0.1);
+  box-shadow: 0 0 0 4px var(--ring-glow);
 }
 
 .form-note {
@@ -634,7 +722,7 @@ h1 span {
 .spinner {
   width: 17px;
   height: 17px;
-  border: 2px solid rgba(255, 255, 255, 0.42);
+  border: 2px solid var(--overlay-soft);
   border-top-color: var(--white);
   border-radius: 50%;
   animation: spin 760ms linear infinite;
@@ -643,7 +731,7 @@ h1 span {
 .success-message {
   margin: 0;
   padding: 0 2px;
-  color: #24304f;
+  color: var(--ink);
   font-size: 0.94rem;
   line-height: 1.45;
   font-weight: 700;
@@ -957,6 +1045,10 @@ h1 span {
     <div class="nav-actions">
       <a href="./app.html">Live Demo</a>
       <a href="./login.html">Log in</a>
+      <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode" aria-pressed="false" title="Toggle dark mode">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
       <a class="button nav-cta" href="#waitlist" data-open-waitlist>Get Started</a>
     </div>
   </header>
