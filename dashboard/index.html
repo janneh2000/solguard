@@ -522,6 +522,19 @@ h1 span {
   width: min(50%, 405px);
   height: auto;
   mix-blend-mode: multiply;
+  transition: filter 200ms ease;
+}
+
+/* Dark mode: the source illustration ships with a white background and
+   relies on mix-blend-mode:multiply to disappear into the page. On a dark
+   page that white square shows through (multiply darkens visible parts and
+   the bg stays bright), so swap to a circular radial mask + slight tone
+   adjustment so the artwork blends into the dark hero. */
+:root[data-theme="dark"] .visual img {
+  mix-blend-mode: normal;
+  filter: brightness(0.92) contrast(1.04) saturate(1.05);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 58%, transparent 72%);
+          mask-image: radial-gradient(circle at 50% 50%, #000 58%, transparent 72%);
 }
 
 .orb {
